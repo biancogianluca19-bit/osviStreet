@@ -4,7 +4,7 @@ Juego de fútbol callejero 5 contra 5, hecho con Vite, TypeScript, Three.js y Ca
 
 ## Estado del proyecto
 
-Las fases 1 y 2 están completas y jugables. La cancha cerrada en 3D tiene cuatro jugadores de campo y un arquero por equipo, rebotes contra las paredes, pase, pase alto, remate, barrida y sprint. Se sumaron ocho trucos, una barra de estilo y el remate especial.
+Las fases 1, 2 y 3 están completas y jugables. La cancha cerrada en 3D tiene cuatro jugadores de campo y un arquero por equipo, rebotes contra las paredes, pase, pase alto, remate, barrida y sprint. Incluye ocho trucos, una barra de estilo, remate especial y tres niveles de IA. Los rivales presionan, se apoyan, buscan pases de pared, usan trucos y rematan; los arqueros calculan el recorrido de la pelota y despejan cuando la controlan.
 
 ## Ejecutar en desarrollo
 
@@ -41,12 +41,27 @@ En computadora, usá **W A S D** o las flechas para moverte, **J** para pasar, *
 - `src/game/types.ts`: entidades, entradas y límites de la cancha.
 - `src/game/physics.ts`: movimiento y rebotes de la pelota en las paredes y los arcos.
 - `src/game/rules.ts`: reloj, goles, posesión, movimiento de jugadores y acciones.
+- `src/game/ai.ts`: presión, apoyos, decisiones de remate y reacción de arqueros para tres dificultades.
+- `src/game/simulate.ts`: simulación reproducible de partidos entre IAs para balance.
 - `src/game/renderer.ts`: cancha y personajes de Three.js.
 - `src/game/tricks.ts` y `src/game/styleMeter.ts`: selección por gesto, lista de trucos y reglas de estilo.
 - `src/main.ts` y `src/style.css`: interfaz, eventos táctiles, teclado y presentación.
-- `tests/phase1.test.ts` y `tests/tricks.test.ts`: reglas, física, trucos y barra de estilo.
+- `tests/phase1.test.ts`, `tests/tricks.test.ts`, `tests/ai.test.ts` y `tests/aiBalance.test.ts`: reglas, física, trucos, estilo, decisiones de IA y balance.
 
 La simulación no depende del render: las reglas reciben un estado y entradas y actualizan el partido; Three.js solo dibuja ese estado.
+
+## Verificación
+
+- `pnpm test`: Vitest; incluye 200 partidos IA contra IA. En la última corrida promediaron **5,855 goles** y no hubo partidos sin remates. Cada equipo quedó dentro del límite de cinco goles.
+- `pnpm build`: compila la aplicación web.
+- El código se revisó para verificar que las reglas no dependan de Three.js, que el arquero distribuya la pelota y que las atajadas no se cuenten más de una vez por choque.
+
+### Cambios revisados
+
+- Saque alternado después de cada gol para evitar que un equipo conserve la ventaja de iniciar cada jugada.
+- El arquero despeja cuando toma la pelota y predice la trayectoria con la desaceleración de la pelota.
+- Se calibraron la precisión de remate y el alcance del arquero con 200 partidos reproducibles.
+- El contador de atajadas tiene un enfriamiento para que un contacto repetido no se cuente varias veces.
 
 ## Publicación
 

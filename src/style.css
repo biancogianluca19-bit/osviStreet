@@ -40,6 +40,11 @@ h1, h2, p { margin: 0; }
 .primary-button:hover { filter: brightness(1.06); transform: translateY(-2px); box-shadow: 0 6px 0 var(--ink), 0 11px 18px rgba(17, 15, 28, .18); }
 .primary-button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
 .button-arrow { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: var(--ink); color: var(--sun); font: 700 15px/1 'DM Sans', sans-serif; }
+.play-row { display: flex; align-items: flex-end; gap: 9px; }
+.difficulty-picker { display: flex; min-width: 98px; min-height: 49px; flex-direction: column; justify-content: center; gap: 4px; margin-top: 19px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.38); border-radius: 9px; background: rgba(25,24,38,.52); box-shadow: 0 4px 11px rgba(17,15,28,.14); }
+.difficulty-picker span { color: rgba(255,247,223,.68); font-size: 6px; font-weight: 900; letter-spacing: .16em; }
+.difficulty-picker select { width: 100%; padding: 0; border: 0; outline: none; appearance: none; background: transparent; color: var(--sun); font: 900 10px/1 'Barlow Condensed', Impact, sans-serif; letter-spacing: .09em; }
+.difficulty-picker option { background: #171725; color: var(--cream); }
 .intro-meta { display: flex; align-items: center; gap: 10px; margin-top: 21px; color: rgba(255, 250, 232, .78); font-size: 8px; font-weight: 800; letter-spacing: .1em; }
 .intro-meta i { display: block; width: 3px; height: 3px; border-radius: 50%; background: var(--sun); }
 .corner-label { position: absolute; z-index: 3; right: clamp(15px, 3vw, 40px); bottom: 17px; display: flex; gap: 15px; color: rgba(255, 247, 224, .74); font-size: 8px; font-weight: 800; letter-spacing: .13em; text-shadow: 0 1px 5px rgba(30,20,35,.35); }
@@ -121,6 +126,7 @@ kbd { padding: 3px 5px; border: 1px solid rgba(255,255,255,.22); border-radius: 
   .intro-panel h1 { margin-top: 10px; font-size: clamp(37px, 10.3vh, 52px); }
   .intro-panel p { max-width: 260px; margin-top: 9px; font-size: 11px; }
   .intro-panel .primary-button { min-height: 40px; margin-top: 11px; padding: 0 13px; font-size: 11px; }
+  .difficulty-picker { min-height: 40px; min-width: 88px; margin-top: 11px; padding: 5px 8px; }
   .intro-meta { margin-top: 12px; gap: 7px; font-size: 7px; }
   .match-hud { width: min(430px, calc(100vw - 175px)); min-height: 47px; }
   .action-cluster { grid-template-columns: repeat(4, clamp(42px, 12vmin, 51px)); grid-template-rows: repeat(2, clamp(42px, 12vmin, 51px)); gap: 4px; }

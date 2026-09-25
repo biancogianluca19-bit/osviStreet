@@ -55,7 +55,10 @@ export function stepBall(ball: Ball, dt: number): WallResult {
     if (ball.verticalVelocity < -1.2) ball.verticalVelocity *= -0.43;
     else ball.verticalVelocity = 0;
   }
-  const damp = Math.exp(-0.85 * dt);
+  // Fast shots and long passes keep their pace across the compact court. Slow
+  // loose balls still settle quickly enough to make possession readable.
+  const horizontalSpeed = Math.hypot(ball.velocity.x, ball.velocity.z);
+  const damp = Math.exp((horizontalSpeed > 10 ? -0.34 : -0.85) * dt);
   ball.velocity.x *= damp;
   ball.velocity.z *= damp;
   ball.verticalVelocity *= Math.exp(-0.16 * dt);

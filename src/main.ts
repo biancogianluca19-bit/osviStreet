@@ -10,7 +10,7 @@ import '@fontsource/dm-sans/700.css';
 import '@fontsource/dm-sans/800.css';
 import './style.css';
 import { createMatch, stepMatch } from './game/rules';
-import { type ActionId, type MatchState, type PlayerControls, type Vec2 } from './game/types';
+import { type ActionId, type Difficulty, type MatchState, type PlayerControls, type Vec2 } from './game/types';
 import { DEFAULT_TRICK, TRICK_SWIPE_THRESHOLD, TRICKS, trickFromSwipe, type TrickId } from './game/tricks';
 import { canUseSpecialShot } from './game/styleMeter';
 import { MatchRenderer } from './game/renderer';
@@ -34,6 +34,7 @@ const eventCallout = el<HTMLDivElement>('event-callout');
 const trickButton = el<HTMLButtonElement>('trick-button');
 const trickSelector = el<HTMLDivElement>('trick-selector');
 const trickPreview = el<HTMLElement>('trick-preview');
+const difficultySelect = el<HTMLSelectElement>('difficulty-select');
 const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 
 let game: MatchState = createMatch();
@@ -65,7 +66,7 @@ const latestEvents = new Set<number>();
 let eventCalloutTimer = 0;
 
 function beginMatch() {
-  game = createMatch();
+  game = createMatch({ difficulty: Number(difficultySelect.value) as Difficulty });
   running = true;
   paused = false;
   queuedAction = undefined;

@@ -3,7 +3,8 @@ import type { TrickId } from './tricks';
 export type TeamId = 0 | 1;
 export type PlayerRole = 'field' | 'keeper';
 export type MatchPhase = 'kickoff' | 'playing' | 'goal' | 'finished';
-export type ActionId = 'pass' | 'lob' | 'shoot' | 'slide' | 'trick' | 'special';
+export type ActionId = 'pass' | 'lob' | 'wallpass' | 'shoot' | 'slide' | 'trick' | 'special';
+export type Difficulty = 0 | 1 | 2;
 
 export interface Vec2 {
   x: number;
@@ -21,6 +22,7 @@ export interface Footballer {
   actionCooldown: number;
   stun: number;
   tackleCooldown: number;
+  saveCooldown: number;
   trickCooldown: number;
   trickId?: TrickId;
   trickTimer: number;
@@ -65,12 +67,15 @@ export interface MatchState {
   remaining: number;
   frame: number;
   seed: number;
+  difficulty: Difficulty;
+  targetScore: number;
   teams: [Team, Team];
   players: Footballer[];
   ball: Ball;
   events: GameEvent[];
   eventId: number;
   kickoffTimer: number;
+  kickoffTeam: TeamId;
   selectedPlayerId: string;
   nextAiAction: number[];
   skill: [number, number];
@@ -91,14 +96,14 @@ export interface MatchOptions {
   targetScore?: number;
   teamNames?: [string, string];
   teamColors?: [[string, string], [string, string]];
-  difficulty?: 0 | 1 | 2;
+  difficulty?: Difficulty;
 }
 
 export const FIELD = {
   halfLength: 12,
   halfWidth: 7,
   wallInset: 0.45,
-  goalHalfWidth: 2.1,
+  goalHalfWidth: 1.5,
   goalHeight: 2.8,
   playerRadius: 0.42,
   ballRadius: 0.24,
