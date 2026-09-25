@@ -15,21 +15,9 @@ pnpm build
 
 ## Publicación
 
-La URL prevista de GitHub Pages es `https://<usuario>.github.io/<repositorio>/`. El repositorio local todavía no tiene un remoto y por eso no hay una dirección pública asignada.
+El sitio público es [https://biancogianluca19-bit.github.io/osviStreet/](https://biancogianluca19-bit.github.io/osviStreet/). El código está en [GitHub](https://github.com/biancogianluca19-bit/osviStreet); consultá allí [Actions](https://github.com/biancogianluca19-bit/osviStreet/actions) y [Releases](https://github.com/biancogianluca19-bit/osviStreet/releases).
 
-Para habilitar publicación y APK automáticas:
-
-1. Creá un repositorio público vacío en GitHub. El plan gratuito requiere repositorio público para GitHub Pages.
-2. En **Settings → Pages**, elegí **GitHub Actions** como fuente de publicación.
-3. Desde esta carpeta, conectá el repositorio y subí la rama `main`:
-
-   ```sh
-   git remote add origin https://github.com/<usuario>/<repositorio>.git
-   git push -u origin main
-   ```
-
-4. La acción `.github/workflows/ci.yml` corre Vitest y el build. En cada push compila `app-debug.apk`, la adjunta al workflow y crea un prerelease de GitHub. En los pushes a la rama predeterminada publica el sitio en Pages.
-5. La URL final aparece en **Settings → Pages** y en el resumen del job **GitHub Pages**. Para un repositorio normal suele ser `https://<usuario>.github.io/<repositorio>/`.
+`.github/workflows/ci.yml` corre Vitest y el build en cada push. También compila `app-debug.apk`, la adjunta al workflow y crea un prerelease de GitHub. En los pushes a la rama predeterminada publica el sitio en Pages.
 
 La publicación no necesita secretos adicionales: Actions usa `GITHUB_TOKEN` con permisos limitados al job. Los prereleases son APKs de depuración y no están firmados para Play Store.
 
@@ -121,7 +109,6 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 ## Pendiente de probar
 
-- Falta conectar y subir el repositorio a GitHub. Hasta entonces no se puede asignar una URL real de Pages ni ejecutar Actions.
-- El entorno actual no tiene Java, Android SDK, Gradle ni emulador; la compilación de la APK quedó configurada para GitHub Actions, pero todavía no se produjo un APK en este entorno.
+- No se pudo instalar la APK en un teléfono o emulador desde este entorno.
 - No se midieron 60 FPS en un teléfono Android de gama media ni se probaron allí la orientación, el audio y los controles táctiles físicos.
 - Vite informa que el bundle principal supera 500 kB sin comprimir. La salida actual ronda 152 kB comprimida; queda medir su efecto en redes móviles y equipos reales.
