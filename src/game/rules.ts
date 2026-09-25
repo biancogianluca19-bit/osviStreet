@@ -62,7 +62,9 @@ export function createMatch(options: MatchOptions = {}): MatchState {
       { id: 1, name: names[1], primary: colors[1][0], secondary: colors[1][1], score: 0, shots: 0, saves: 0 },
     ],
     players, ball, events: [], eventId: 0, kickoffTimer: 0.65, kickoffTeam: 0,
-    selectedPlayerId: 't0-p1', nextAiAction: [0.6, 0.3], skill: [0, 0],
+    selectedPlayerId: 't0-p1', secondSelectedPlayerId: 't1-p1',
+    localPlayers: options.localPlayers ?? 1, bootColor: options.bootColor ?? '#fff1d2',
+    nextAiAction: [0.6, 0.3], skill: [0, 0],
   };
   pushEvent(state, 'kick', '¡A jugar!', 0, { x: 0, z: 0 });
   return state;
@@ -277,7 +279,7 @@ function scoreGoal(state: MatchState, team: TeamId) {
   pushEvent(state, 'goal', `¡GOL DE ${state.teams[team].name.toUpperCase()}!`, team, { x: team === 0 ? 9 : -9, z: 0 }, undefined, 1.6);
 }
 
-export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 1 / 60, aiDifficulty: Difficulty = state.difficulty, aiVsAi = false): MatchState {
+export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 1 / 60, aiDifficulty: Difficulty = state.difficulty, aiVsAi = false, secondPlayerControls: PlayerControls = { move: { x: 0, z: 0 }, sprint: false, slide: false }): MatchState {
   if (state.phase === 'finished') return state;
   const slice = Math.min(dt, 1 / 20);
   state.frame += 1;
@@ -298,18 +300,34 @@ export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 
   }
 
   const owner = state.players.find((p) => p.id === state.ball.ownerId);
-  if (owner?.team === 0 && owner.role === 'field') state.selectedPlayerId = owner.id;
-  else if (owner?.team !== 0 || !owner) {
+  if (owner?.role === 'field') {
+    if (owner.team === 0) state.selectedPlayerId = owner.id;
+    else {
+      const closest = nearestFieldPlayer(state, 0, state.ball.position);
+      if (closest) state.selectedPlayerId = closest.id;
+      if (state.localPlayers === 2) state.secondSelectedPlayerId = owner.id;
+    }
+  } else if (!owner) {
     const closest = nearestFieldPlayer(state, 0, state.ball.position);
     if (closest) state.selectedPlayerId = closest.id;
+    if (state.localPlayers === 2) {
+      const closestSecond = nearestFieldPlayer(state, 1, state.ball.position);
+      if (closestSecond) state.secondSelectedPlayerId = closestSecond.id;
+    }
   }
   const team1Controls = createTeamAiControls(state, 1, aiDifficulty);
   const team0AiControls = aiVsAi ? createTeamAiControls(state, 0, aiDifficulty) : null;
   state.players.forEach((player) => {
     const idle: PlayerControls = { move: { x: 0, z: 0 }, sprint: false, slide: false };
-    const controls = player.team === 1 ? team1Controls.get(player.id) ?? idle
-      : team0AiControls ? team0AiControls.get(player.id) ?? idle
-      : player.id === state.selectedPlayerId ? userControls : idle;
+    const controls = aiVsAi
+      ? (player.team === 0 ? team0AiControls?.get(player.id) : team1Controls.get(player.id)) ?? idle
+      : state.localPlayers === 2
+      ? player.team === 0 && player.id === state.selectedPlayerId ? userControls
+      : player.team === 1 && player.id === state.secondSelectedPlayerId ? secondPlayerControls
+      : idle
+      : player.team === 1 ? team1Controls.get(player.id) ?? idle
+      : player.id === state.selectedPlayerId ? userControls
+      : idle;
     if (controls.slide && player.role === 'field' && player.tackleCooldown <= 0) performTackle(state, player);
     movePlayer(player, controls, slice);
     if (controls.trickId) performTrick(state, player.id, controls.trickId);

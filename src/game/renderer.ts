@@ -180,7 +180,7 @@ export class MatchRenderer {
     return root;
   }
 
-  private createActor(player: Footballer, colors: [string, string]): ActorView {
+  private createActor(player: Footballer, colors: [string, string], bootColor: string): ActorView {
     const root = new THREE.Group();
     const torso = this.outline(new THREE.CapsuleGeometry(0.3, 0.48, 3, 7), colors[0]);
     torso.position.y = 1.06;
@@ -202,7 +202,7 @@ export class MatchRenderer {
       const leg = this.outline(new THREE.CapsuleGeometry(0.115, 0.36, 2, 5), '#312b48');
       leg.position.set(side * 0.14, 0.22, 0);
       root.add(leg);
-      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.28), colorMaterial('#fff1d2'));
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.28), colorMaterial(player.team === 0 ? bootColor : '#fff1d2'));
       shoe.position.set(side * 0.14, 0.075, 0.075);
       root.add(shoe);
     }
@@ -219,7 +219,7 @@ export class MatchRenderer {
       gloves.position.set(0.36, 0.9, 0.06);
       root.add(gloves);
     }
-    if (player.id === 't0-p1') {
+    if (player.id === 't0-p1' || player.id === 't1-p1') {
       pulse = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.045, 4, 24), new THREE.MeshBasicMaterial({ color: '#fff18b' }));
       pulse.rotation.x = Math.PI / 2;
       pulse.position.y = 0.04;
@@ -258,7 +258,7 @@ export class MatchRenderer {
       let view = this.actors.get(player.id);
       if (!view) {
         const colors = [state.teams[player.team].primary, state.teams[player.team].secondary] as [string, string];
-        view = this.createActor(player, colors);
+        view = this.createActor(player, colors, state.bootColor);
         this.actors.set(player.id, view);
         this.arena.add(view.root);
       }
@@ -272,7 +272,7 @@ export class MatchRenderer {
       const run = Math.hypot(player.velocity.x, player.velocity.z) > 1;
       view.root.position.y = player.celebration > 0 ? Math.abs(Math.sin((1.2 - player.celebration) * 14)) * 0.5 : flourish * (player.trickId === 'sombrerito' ? 0.35 : 0.18) + (run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0);
       if (view.pulse) {
-        view.pulse.visible = player.id === state.selectedPlayerId;
+        view.pulse.visible = player.id === state.selectedPlayerId || (state.localPlayers === 2 && player.id === state.secondSelectedPlayerId);
         view.pulse.rotation.z += dt * 0.7;
       }
       if (view.keeper) view.root.scale.set(1.08, 1.08, 1.08);

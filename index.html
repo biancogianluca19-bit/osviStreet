@@ -21,12 +21,15 @@
         <div class="eyebrow"><span class="live-dot"></span> FÚTBOL DE ESQUINA · 5 CONTRA 5</div>
         <h1 id="intro-title">TU BARRIO.<br><span>TUS REGLAS.</span></h1>
         <p>La jaula está abierta. Ganá el partido y hacete dueño de la cancha.</p>
-        <div class="play-row"><button class="primary-button" id="start-match"><span>JUGAR PARTIDO</span><span class="button-arrow">↗</span></button><label class="difficulty-picker" for="difficulty-select"><span>DIFICULTAD</span><select id="difficulty-select"><option value="0">TRANQUI</option><option value="1" selected>NORMAL</option><option value="2">PICANTE</option></select></label></div>
+        <div class="play-row"><button class="primary-button" id="start-match"><span>PARTIDO RÁPIDO</span><span class="button-arrow">↗</span></button><label class="difficulty-picker" for="difficulty-select"><span>DIFICULTAD</span><select id="difficulty-select"><option value="0">TRANQUI</option><option value="1" selected>NORMAL</option><option value="2">PICANTE</option></select></label></div>
+        <div class="mode-row"><button class="mode-button" id="start-tournament"><b>🏆 COPA DE BARRIO</b><span>8 equipos · eliminación directa</span></button><button class="mode-button" id="start-local"><b>⚡ DUELO LOCAL</b><span>2 jugadores · mismo dispositivo</span></button></div>
+        <div class="locker-row"><strong id="locker-count">0 VICTORIAS · VESTUARIO</strong><label>CAMISETA<select id="uniform-select" aria-label="Equipar camiseta"></select></label><label>BOTINES<select id="boots-select" aria-label="Equipar botines"></select></label><label>CANCHA<select id="court-select" aria-label="Elegir cancha"></select></label></div>
+        <p class="tournament-status hidden" id="tournament-status"></p>
         <div class="intro-meta"><span>3 MINUTOS</span><i></i><span>PRIMERO A 5</span><i></i><span>SIN OFFSIDE</span></div>
       </section>
       <section class="match-hud hidden" id="match-hud" aria-label="Marcador">
         <div class="team-score team-score-home"><span class="score-team" id="team-home">LOS CANDELA</span><strong id="score-home">0</strong></div>
-        <div class="timer-block"><span class="timer-label">JAULA ABIERTA</span><strong id="match-timer">3:00</strong></div>
+        <div class="timer-block"><span class="timer-label" id="match-kind">JAULA ABIERTA</span><strong id="match-timer">3:00</strong></div>
         <div class="team-score team-score-away"><strong id="score-away">0</strong><span class="score-team" id="team-away">BARRIO NORTE</span></div>
         <button class="pause-button" id="pause-match" aria-label="Pausar partido">Ⅱ</button>
         <div class="skill-readout" id="skill-readout"><span>ESTILO</span><div class="skill-meter"><i id="skill-meter-fill"></i></div><b id="skill-meter-label">0%</b></div>
@@ -42,14 +45,23 @@
           <button class="touch-action sprint-action" data-hold="sprint" aria-label="Mantener sprint"><span>➤</span><b>SPRINT</b></button>
           <button class="touch-action shoot-action" data-action="shoot" aria-label="Remate"><span>⚽</span><b>REMATE</b></button>
         </div>
+        <div class="duo-actions hidden" id="duo-actions" aria-label="Acciones del jugador 2">
+          <button class="touch-action" data-p2-action="pass" aria-label="Jugador 2: pase"><span>↗</span><b>PASE</b></button>
+          <button class="touch-action" data-p2-action="lob" aria-label="Jugador 2: pase por arriba"><span>⌒</span><b>ALTO</b></button>
+          <button class="touch-action p2-shoot-action" data-p2-action="shoot" aria-label="Jugador 2: remate"><span>⚽</span><b>TIRO</b></button>
+          <button class="touch-action" data-p2-action="slide" aria-label="Jugador 2: barrida"><span>⌁</span><b>BARRIDA</b></button>
+          <button class="touch-action" id="trick-button-p2" aria-label="Jugador 2: deslizar para elegir truco"><span>✦</span><b>TRUCO</b></button>
+          <button class="touch-action" data-p2-hold="sprint" aria-label="Jugador 2: mantener sprint"><span>➤</span><b>SPRINT</b></button>
+        </div>
+        <div class="joy-base duo-joy hidden" id="joystick-p2" aria-label="Joystick de movimiento del jugador 2"><div class="joy-ring"></div><div class="joy-knob" id="joystick-knob-p2"></div></div>
       </section>
       <div class="trick-selector hidden" id="trick-selector" role="status" aria-live="polite"><strong id="trick-preview">DESLIZÁ PARA ELEGIR</strong><div class="trick-options">
         <span data-trick="canio">→ CAÑO</span><span data-trick="rabona">↘ RABONA</span><span data-trick="bicicleta">↓ BICI</span><span data-trick="sombrerito">↙ SOMBRERO</span>
         <span data-trick="elastica">← ELÁSTICA</span><span data-trick="taco">↖ TACO</span><span data-trick="rueda">↑ RUEDA</span><span data-trick="pecho">↗ PECHO</span>
       </div></div>
-      <div class="desktop-hints hidden" id="desktop-hints"><span><kbd>W A S D</kbd> MOVER</span><span><kbd>J</kbd> PASE</span><span><kbd>K</kbd> PASE ALTO</span><span><kbd>ESPACIO</kbd> REMATE</span><span><kbd>T</kbd> TRUCO</span><span><kbd>SHIFT</kbd> SPRINT</span></div>
+      <div class="desktop-hints hidden" id="desktop-hints"><span><kbd>W A S D</kbd> MOVER</span><span><kbd>J</kbd> PASE</span><span><kbd>K</kbd> PASE ALTO</span><span><kbd>ESPACIO</kbd> REMATE</span><span><kbd>T</kbd> TRUCO</span><span><kbd>SHIFT</kbd> SPRINT</span><span class="p2-hints hidden"><kbd>← ↑ → ↓</kbd> MOVER · <kbd>1–5</kbd> ACCIONES · <kbd>0</kbd> SPRINT P2</span></div>
       <section class="pause-panel hidden" id="pause-panel" aria-label="Partido pausado"><span class="eyebrow">RESPIRÁ UN SEGUNDO</span><h2>PARTIDO PAUSADO</h2><button class="primary-button" id="resume-match">VOLVER A JUGAR</button><button class="text-button" id="quit-match">SALIR AL MENÚ</button></section>
-      <section class="result-panel hidden" id="result-panel" aria-live="polite"><span class="eyebrow">PARTIDO TERMINADO</span><h2 id="result-title">¡GANASTE LA JAULA!</h2><p id="result-score">0 — 0</p><button class="primary-button" id="replay-match">REVANCHA</button><button class="text-button" id="result-menu">VOLVER AL MENÚ</button></section>
+      <section class="result-panel hidden" id="result-panel" aria-live="polite"><span class="eyebrow">PARTIDO TERMINADO</span><h2 id="result-title">¡GANASTE LA JAULA!</h2><p id="result-score">0 — 0</p><small class="result-note" id="result-note"></small><button class="primary-button hidden" id="next-round">SIGUIENTE RONDA</button><button class="primary-button" id="replay-match">REVANCHA</button><button class="text-button" id="result-menu">VOLVER AL MENÚ</button></section>
       <aside class="rotate-screen"><div class="rotate-icon">▱</div><strong>GIRÁ EL CELULAR</strong><span>osviStreet se juega en horizontal.</span></aside>
       <div class="corner-label"><span>EDICIÓN DE BARRIO</span><span>ARCADE · 01</span></div>
     </div>

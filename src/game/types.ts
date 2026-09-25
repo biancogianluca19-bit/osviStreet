@@ -77,6 +77,9 @@ export interface MatchState {
   kickoffTimer: number;
   kickoffTeam: TeamId;
   selectedPlayerId: string;
+  secondSelectedPlayerId: string;
+  localPlayers: 1 | 2;
+  bootColor: string;
   nextAiAction: number[];
   skill: [number, number];
 }
@@ -97,6 +100,8 @@ export interface MatchOptions {
   teamNames?: [string, string];
   teamColors?: [[string, string], [string, string]];
   difficulty?: Difficulty;
+  localPlayers?: 1 | 2;
+  bootColor?: string;
 }
 
 export const FIELD = {
