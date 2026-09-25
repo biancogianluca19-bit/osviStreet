@@ -88,6 +88,38 @@ function keeperControls(state: MatchState, player: Footballer, team: TeamId, dif
   };
 }
 
+function supportTarget(
+  state: MatchState,
+  player: Footballer,
+  anchor: Vec2,
+  team: TeamId,
+  teammates: Footballer[],
+  opponents: Footballer[],
+): Vec2 {
+  const attack = team === 0 ? 1 : -1;
+  const index = Number(player.id.slice(-1)) || 0;
+  const lane = [-4.6, -1.7, 1.7, 4.6][index] ?? 0;
+  const run = Math.sin(state.elapsed * 1.18 + index * 1.9);
+  const sway = Math.sin(state.elapsed * 0.76 + index * 2.3) * 0.58;
+  const forwardRun = index % 2 === 0 ? 2.1 : 3.45;
+  const target = {
+    x: clamp(anchor.x + attack * (forwardRun + run * 0.72), -9.7, 9.7),
+    z: clamp(lane * 0.65 + clamp(anchor.z * 0.23, -1.3, 1.3) + sway, -5.8, 5.8),
+  };
+
+  const marker = nearestField(opponents, target);
+  if (marker && distance(marker.position, target) < 2.15) {
+    const openSide = target.z >= marker.position.z ? 1 : -1;
+    target.z = clamp(target.z + openSide * 1.35, -5.8, 5.8);
+  }
+  const nearbyTeammate = nearestField(teammates.filter((candidate) => candidate.id !== player.id), target);
+  if (nearbyTeammate && distance(nearbyTeammate.position, target) < 1.7) {
+    const openSide = target.z >= nearbyTeammate.position.z ? 1 : -1;
+    target.z = clamp(target.z + openSide * 0.85, -5.8, 5.8);
+  }
+  return target;
+}
+
 /** Choose a pressure, cover, support, keeper, or ball-carrying role for each AI player. */
 export function createTeamAiControls(state: MatchState, team: TeamId, difficulty: Difficulty): Map<string, PlayerControls> {
   const teammates = state.players.filter((player) => player.team === team);
@@ -142,9 +174,7 @@ export function createTeamAiControls(state: MatchState, team: TeamId, difficulty
     }
 
     if (owner?.team === team) {
-      const index = Number(player.id.slice(-1)) || 0;
-      const lane = [-4.6, -1.7, 1.7, 4.6][index] ?? 0;
-      const support = { x: clamp(owner.position.x + attack * (index % 2 ? 3.1 : 2.3), -9.7, 9.7), z: lane };
+      const support = supportTarget(state, player, owner.position, team, teammates, opponents);
       controls.set(player.id, moveToward(player, support, difficulty, distance(player.position, support) > 3));
       continue;
     }
@@ -168,9 +198,7 @@ export function createTeamAiControls(state: MatchState, team: TeamId, difficulty
     if (player.id === chaser?.id) {
       controls.set(player.id, moveToward(player, state.ball.position, difficulty, true));
     } else {
-      const index = Number(player.id.slice(-1)) || 0;
-      const lane = [-4.8, -1.8, 1.8, 4.8][index] ?? 0;
-      const support = { x: clamp(state.ball.position.x + attack * (index % 2 ? 2.8 : -2.1), -9.6, 9.6), z: lane };
+      const support = supportTarget(state, player, state.ball.position, team, teammates, opponents);
       controls.set(player.id, moveToward(player, support, difficulty, distance(player.position, support) > 4));
     }
   }

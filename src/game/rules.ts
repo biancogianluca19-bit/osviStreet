@@ -319,18 +319,14 @@ export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 
     }
   }
   const team1Controls = createTeamAiControls(state, 1, aiDifficulty);
-  const team0AiControls = aiVsAi ? createTeamAiControls(state, 0, aiDifficulty) : null;
+  const team0Controls = createTeamAiControls(state, 0, aiDifficulty);
   state.players.forEach((player) => {
     const idle: PlayerControls = { move: { x: 0, z: 0 }, sprint: false, slide: false };
-    const controls = aiVsAi
-      ? (player.team === 0 ? team0AiControls?.get(player.id) : team1Controls.get(player.id)) ?? idle
-      : state.localPlayers === 2
-      ? player.team === 0 && player.id === state.selectedPlayerId ? userControls
-      : player.team === 1 && player.id === state.secondSelectedPlayerId ? secondPlayerControls
-      : idle
-      : player.team === 1 ? team1Controls.get(player.id) ?? idle
-      : player.id === state.selectedPlayerId ? userControls
-      : idle;
+    const teamControls = player.team === 0 ? team0Controls : team1Controls;
+    const aiControls = teamControls.get(player.id) ?? idle;
+    let controls = aiControls;
+    if (!aiVsAi && player.team === 0 && player.id === state.selectedPlayerId) controls = userControls;
+    else if (!aiVsAi && state.localPlayers === 2 && player.team === 1 && player.id === state.secondSelectedPlayerId) controls = secondPlayerControls;
     if (controls.slide && player.role === 'field' && player.tackleCooldown <= 0) performTackle(state, player);
     movePlayer(player, controls, slice);
     if (controls.trickId) performTrick(state, player.id, controls.trickId);

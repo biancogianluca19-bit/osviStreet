@@ -41,7 +41,7 @@ En Windows, usá `gradlew.bat assembleDebug` dentro de `android`.
 
 ## Controles
 
-En celular, girá el dispositivo a horizontal. El joystick izquierdo mueve al jugador; los botones de la derecha hacen pase, pase alto, remate, barrida, truco y sprint. Tocá **Truco** para hacer una bicicleta o deslizá desde ese botón para elegir otra jugada:
+En celular, girá el dispositivo a horizontal. El joystick izquierdo mueve al jugador; los botones grandes de la derecha hacen pase, pase alto, remate, barrida, truco y sprint. En navegador también podés usar el joystick y los botones con mouse, o mover al jugador con el teclado. Tocá **Truco** para hacer una bicicleta o deslizá desde ese botón para elegir otra jugada:
 
 | Deslizamiento | Truco |
 | --- | --- |
@@ -106,6 +106,9 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - Los rótulos de gol y truco se limpian al iniciar otro partido y al cambiar el tipo de evento.
 - Se limitó el pixel ratio para móviles, se agregó ajuste por FPS y se liberan las geometrías al cambiar de partido o cancha.
 - El botón de sonido quedó visible y la música comienza después de la primera interacción, según la política de reproducción del navegador.
+- Los compañeros del usuario ya reciben decisiones de IA: corren a ofrecerse, cambian de carril, buscan espacio ante marcas y presionan cuando el rival tiene la pelota.
+- Se ampliaron joysticks, botones de acción y pausa para celular y navegador. El duelo local reorganiza sus dos grupos en pantallas apaisadas angostas.
+- Pausar limpia entradas que hayan quedado sostenidas; el panel permite reanudar o salir al menú. Salir no otorga una victoria ni avanza la copa.
 
 ## Pendiente de probar
 

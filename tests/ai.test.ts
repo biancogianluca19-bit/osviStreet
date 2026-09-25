@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createTeamAiControls, keeperTargetZ } from '../src/game/ai';
-import { createMatch } from '../src/game/rules';
+import { createMatch, stepMatch } from '../src/game/rules';
 
 describe('Fase 3: decisiones de IA', () => {
   it('presiona con un jugador y ajusta el ritmo según dificultad', () => {
@@ -11,6 +11,38 @@ describe('Fase 3: decisiones de IA', () => {
     const hard = createTeamAiControls(state, 1, 2).get('t1-p0')!;
     expect(Math.hypot(easy.move.x, easy.move.z)).toBeCloseTo(0.76);
     expect(Math.hypot(hard.move.x, hard.move.z)).toBeCloseTo(1);
+  });
+
+  it('mantiene en movimiento a los compañeros del usuario y los manda a ofrecerse', () => {
+    const state = createMatch({ seed: 23 });
+    state.phase = 'playing';
+    state.ball.ownerId = 't0-p1';
+    const supportPlayers = state.players.filter((player) => player.team === 0 && player.role === 'field' && player.id !== state.selectedPlayerId);
+    const initialPositions = new Map(supportPlayers.map((player) => [player.id, { ...player.position }]));
+    const idle = { move: { x: 0, z: 0 }, sprint: false, slide: false };
+
+    for (let frame = 0; frame < 30; frame++) stepMatch(state, idle, 1 / 60);
+
+    for (const player of supportPlayers) {
+      const start = initialPositions.get(player.id)!;
+      expect(Math.hypot(player.position.x - start.x, player.position.z - start.z), player.id).toBeGreaterThan(0.2);
+    }
+  });
+
+  it('también activa a los compañeros de ambos jugadores en el duelo local', () => {
+    const state = createMatch({ seed: 24, localPlayers: 2 });
+    state.phase = 'playing';
+    state.ball.ownerId = 't1-p1';
+    const supportPlayers = state.players.filter((player) => player.team === 1 && player.role === 'field' && player.id !== 't1-p1');
+    const initialPositions = new Map(supportPlayers.map((player) => [player.id, { ...player.position }]));
+    const idle = { move: { x: 0, z: 0 }, sprint: false, slide: false };
+
+    for (let frame = 0; frame < 30; frame++) stepMatch(state, idle, 1 / 60, state.difficulty, false, idle);
+
+    for (const player of supportPlayers) {
+      const start = initialPositions.get(player.id)!;
+      expect(Math.hypot(player.position.x - start.x, player.position.z - start.z), player.id).toBeGreaterThan(0.2);
+    }
   });
 
   it('el arquero predice la trayectoria y reacciona antes en dificultad alta', () => {

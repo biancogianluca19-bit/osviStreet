@@ -151,7 +151,35 @@ const keys = new Set<string>();
 const latestEvents = new Set<number>();
 let eventCalloutTimer = 0;
 
+function showMatchControls() {
+  touchUi.classList.remove('hidden');
+  desktopHints.classList.toggle('hidden', isTouch);
+}
+
+function clearControlState() {
+  keys.clear();
+  joystickPointer = null;
+  p2JoystickPointer = null;
+  joystickMove = { x: 0, z: 0 };
+  p2JoystickMove = { x: 0, z: 0 };
+  sprintHeld = false;
+  p2SprintHeld = false;
+  queuedAction = undefined;
+  p2QueuedAction = undefined;
+  slideQueued = false;
+  p2SlideQueued = false;
+  queuedTrick = undefined;
+  p2QueuedTrick = undefined;
+  trickPointer = null;
+  p2TrickPointer = null;
+  knob.style.transform = 'translate(-50%, -50%)';
+  p2Knob.style.transform = 'translate(-50%, -50%)';
+  touchUi.querySelectorAll('.pressed').forEach((button) => button.classList.remove('pressed'));
+  trickSelector.classList.add('hidden');
+}
+
 function beginMatch(mode: GameMode = currentMode) {
+  clearControlState();
   currentMode = mode;
   let homeTeam = STREET_TEAMS[0]!;
   let awayTeam = createQuickMatchTeams(Math.random())[1];
@@ -190,13 +218,10 @@ function beginMatch(mode: GameMode = currentMode) {
   pausePanel.classList.add('hidden');
   resultPanel.classList.add('hidden');
   hud.classList.remove('hidden');
-  if (isTouch) touchUi.classList.remove('hidden');
-  else {
-    desktopHints.classList.remove('hidden');
-    desktopHints.querySelector('.p2-hints')?.classList.toggle('hidden', mode !== 'local');
-  }
-  p2Actions.classList.toggle('hidden', mode !== 'local' || !isTouch);
-  p2Joystick.classList.toggle('hidden', mode !== 'local' || !isTouch);
+  showMatchControls();
+  desktopHints.querySelector('.p2-hints')?.classList.toggle('hidden', mode !== 'local');
+  p2Actions.classList.toggle('hidden', mode !== 'local');
+  p2Joystick.classList.toggle('hidden', mode !== 'local');
   p2SkillReadout.classList.toggle('hidden', mode !== 'local');
   el<HTMLElement>('app').classList.toggle('local-duel', mode === 'local');
   document.documentElement.classList.add('match-active');
@@ -213,6 +238,7 @@ function startTournament() {
 
 function pauseMatch() {
   if (!running || game.phase === 'finished') return;
+  clearControlState();
   paused = true;
   pausePanel.classList.remove('hidden');
   touchUi.classList.add('hidden');
@@ -222,12 +248,12 @@ function pauseMatch() {
 function resumeMatch() {
   paused = false;
   pausePanel.classList.add('hidden');
-  if (isTouch) touchUi.classList.remove('hidden');
-  else desktopHints.classList.remove('hidden');
+  showMatchControls();
   lastTime = performance.now();
 }
 
 function exitMatch() {
+  clearControlState();
   paused = false;
   running = false;
   intro.classList.remove('hidden');
@@ -574,7 +600,7 @@ p2TrickButton.addEventListener('pointercancel', () => {
 });
 
 joystick.addEventListener('pointerdown', (event) => {
-  if (!isTouch || paused) return;
+  if (paused) return;
   event.preventDefault();
   joystickPointer = event.pointerId;
   joystick.setPointerCapture(event.pointerId);
@@ -595,7 +621,7 @@ joystick.addEventListener('pointerup', releaseJoy);
 joystick.addEventListener('pointercancel', releaseJoy);
 
 p2Joystick.addEventListener('pointerdown', (event) => {
-  if (!isTouch || paused || currentMode !== 'local') return;
+  if (paused || currentMode !== 'local') return;
   event.preventDefault();
   p2JoystickPointer = event.pointerId;
   p2Joystick.setPointerCapture(event.pointerId);
@@ -674,7 +700,7 @@ window.addEventListener('keyup', (event) => {
   if (event.code === 'Numpad0') keys.delete('p2-sprint');
   keys.delete(keyMap[event.key] ?? event.key.toLowerCase());
 });
-window.addEventListener('blur', () => { keys.clear(); sprintHeld = false; p2SprintHeld = false; joystickMove = { x: 0, z: 0 }; p2JoystickMove = { x: 0, z: 0 }; });
+window.addEventListener('blur', clearControlState);
 
 updateMenuProfile();
 requestAnimationFrame(frame);
