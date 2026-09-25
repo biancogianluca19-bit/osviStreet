@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#111623" />
+    <meta name="description" content="Fútbol callejero 5 contra 5. Elegí tu esquina y hacé vibrar la jaula." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>osviStreet — Fútbol de calle</title>
+  </head>
+  <body>
+    <div id="app">
+      <main id="stadium" aria-label="Cancha de fútbol callejero"></main>
+      <div class="screen-tint"></div>
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="osviStreet, inicio"><span class="brand-mark">O</span><span>osvi<span class="brand-accent">Street</span></span></a>
+        <button class="icon-button" id="sound-toggle" aria-label="Activar sonido" title="Sonido">♫</button>
+      </header>
+      <section class="intro-panel" id="intro-panel" aria-labelledby="intro-title">
+        <div class="eyebrow"><span class="live-dot"></span> FÚTBOL DE ESQUINA · 5 CONTRA 5</div>
+        <h1 id="intro-title">TU BARRIO.<br><span>TUS REGLAS.</span></h1>
+        <p>La jaula está abierta. Ganá el partido y hacete dueño de la cancha.</p>
+        <button class="primary-button" id="start-match"><span>JUGAR PARTIDO</span><span class="button-arrow">↗</span></button>
+        <div class="intro-meta"><span>3 MINUTOS</span><i></i><span>PRIMERO A 5</span><i></i><span>SIN OFFSIDE</span></div>
+      </section>
+      <section class="match-hud hidden" id="match-hud" aria-label="Marcador">
+        <div class="team-score team-score-home"><span class="score-team" id="team-home">LOS CANDELA</span><strong id="score-home">0</strong></div>
+        <div class="timer-block"><span class="timer-label">JAULA ABIERTA</span><strong id="match-timer">3:00</strong></div>
+        <div class="team-score team-score-away"><strong id="score-away">0</strong><span class="score-team" id="team-away">BARRIO NORTE</span></div>
+        <button class="pause-button" id="pause-match" aria-label="Pausar partido">Ⅱ</button>
+        <div class="skill-readout hidden" id="skill-readout"><span>ESTILO</span><div class="skill-meter"><i id="skill-meter-fill"></i></div><b id="skill-meter-label">0%</b></div>
+      </section>
+      <div class="event-callout" id="event-callout" aria-live="polite"></div>
+      <section class="touch-ui hidden" id="touch-ui" aria-label="Controles del partido">
+        <div class="joy-base" id="joystick" aria-label="Joystick de movimiento"><div class="joy-ring"></div><div class="joy-knob" id="joystick-knob"></div></div>
+        <div class="action-cluster">
+          <button class="touch-action pass-action" data-action="pass" aria-label="Pase"><span>↗</span><b>PASE</b></button>
+          <button class="touch-action lob-action" data-action="lob" aria-label="Pase por arriba"><span>⌒</span><b>ALTO</b></button>
+          <button class="touch-action slide-action" data-action="slide" aria-label="Barrida"><span>⌁</span><b>BARRIDA</b></button>
+          <button class="touch-action sprint-action" data-hold="sprint" aria-label="Mantener sprint"><span>➤</span><b>SPRINT</b></button>
+          <button class="touch-action shoot-action" data-action="shoot" aria-label="Remate"><span>⚽</span><b>REMATE</b></button>
+        </div>
+      </section>
+      <div class="desktop-hints hidden" id="desktop-hints"><span><kbd>W A S D</kbd> MOVER</span><span><kbd>J</kbd> PASE</span><span><kbd>K</kbd> PASE ALTO</span><span><kbd>ESPACIO</kbd> REMATE</span><span><kbd>SHIFT</kbd> SPRINT</span></div>
+      <section class="pause-panel hidden" id="pause-panel" aria-label="Partido pausado"><span class="eyebrow">RESPIRÁ UN SEGUNDO</span><h2>PARTIDO PAUSADO</h2><button class="primary-button" id="resume-match">VOLVER A JUGAR</button><button class="text-button" id="quit-match">SALIR AL MENÚ</button></section>
+      <section class="result-panel hidden" id="result-panel" aria-live="polite"><span class="eyebrow">PARTIDO TERMINADO</span><h2 id="result-title">¡GANASTE LA JAULA!</h2><p id="result-score">0 — 0</p><button class="primary-button" id="replay-match">REVANCHA</button><button class="text-button" id="result-menu">VOLVER AL MENÚ</button></section>
+      <aside class="rotate-screen"><div class="rotate-icon">▱</div><strong>GIRÁ EL CELULAR</strong><span>osviStreet se juega en horizontal.</span></aside>
+      <div class="corner-label"><span>EDICIÓN DE BARRIO</span><span>ARCADE · 01</span></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
