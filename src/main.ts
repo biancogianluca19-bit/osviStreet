@@ -14,6 +14,7 @@ import { type ActionId, type Difficulty, type MatchState, type PlayerControls, t
 import { DEFAULT_TRICK, TRICK_SWIPE_THRESHOLD, TRICKS, trickFromSwipe, type TrickId } from './game/tricks';
 import { canUseSpecialShot } from './game/styleMeter';
 import { MatchRenderer } from './game/renderer';
+import { StreetAudio } from './game/audio';
 import { BOOT_STYLES, createQuickMatchTeams, createTournament, currentTournamentMatch, getStreetTeam, recordTournamentResult, STREET_TEAMS, teamOptions, tournamentRoundName, UNIFORM_STYLES, type TournamentState } from './game/modes';
 import { parseProgress, recordCompletedMatch, REWARDS, selectReward, type PlayerProgress } from './game/progress';
 
@@ -45,12 +46,15 @@ const p2Joystick = el<HTMLDivElement>('joystick-p2');
 const p2Knob = el<HTMLDivElement>('joystick-knob-p2');
 const p2Actions = el<HTMLDivElement>('duo-actions');
 const p2TrickButton = el<HTMLButtonElement>('trick-button-p2');
+const soundToggle = el<HTMLButtonElement>('sound-toggle');
+const p2SkillReadout = el<HTMLElement>('skill-readout-p2');
 const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+let progress: PlayerProgress = parseProgress(localStorage.getItem('osvistreet-progress'));
 
-let game: MatchState = createMatch();
+let game: MatchState = createMatch({ courtId: progress.court, bootColor: BOOT_STYLES[progress.boots].color });
 let renderer: MatchRenderer;
 try {
-  renderer = new MatchRenderer(stadium);
+  renderer = new MatchRenderer(stadium, progress.court);
 } catch (error) {
   console.error(error);
   stadium.innerHTML = '<div class="webgl-error"><strong>Esta cancha necesita WebGL.</strong><span>Actualizá Chrome o activá la aceleración gráfica del celular.</span></div>';
@@ -60,7 +64,6 @@ let running = false;
 type GameMode = 'quick' | 'tournament' | 'local';
 let currentMode: GameMode = 'quick';
 let tournament: TournamentState | null = null;
-let progress: PlayerProgress = parseProgress(localStorage.getItem('osvistreet-progress'));
 let paused = false;
 let joystickPointer: number | null = null;
 let joystickCenter = { x: 0, y: 0 };
@@ -83,6 +86,9 @@ let p2TrickOrigin = { x: 0, y: 0 };
 let p2TrickId: TrickId = DEFAULT_TRICK;
 let tournamentTieBreak = false;
 let matchProgressRecorded = false;
+let slowMotionRemaining = 0;
+const audio = new StreetAudio();
+if (Capacitor.isNativePlatform()) void ScreenOrientation.lock({ orientation: 'landscape' }).catch(() => undefined);
 
 function persistProgress() {
   localStorage.setItem('osvistreet-progress', JSON.stringify(progress));
@@ -105,7 +111,8 @@ function fillLockerSelect(select: HTMLSelectElement, options: Array<{ value: str
 }
 
 function updateMenuProfile() {
-  el<HTMLElement>('locker-count').textContent = `${progress.wins} VICTORIAS · ${progress.unlocked.length} DESBLOQUEOS`;
+  const unlockCount = progress.unlocked.length;
+  el<HTMLElement>('locker-count').textContent = `${progress.wins} VICTORIAS · ${unlockCount} ${unlockCount === 1 ? 'DESBLOQUEO' : 'DESBLOQUEOS'}`;
   fillLockerSelect(uniformSelect, [
     { value: 'candela', label: UNIFORM_STYLES.candela.name, unlockId: 'candela' },
     { value: 'violet', label: UNIFORM_STYLES.violet.name, unlockId: 'uniform-violet' },
@@ -155,10 +162,13 @@ function beginMatch(mode: GameMode = currentMode) {
     awayTeam = getStreetTeam(fixture.awayId);
   }
   const uniformColors = UNIFORM_STYLES[progress.uniform].colors;
+  renderer.setCourt(progress.court);
+  renderer.resetActors();
   game = createMatch({
     difficulty: Number(difficultySelect.value) as Difficulty,
     localPlayers: mode === 'local' ? 2 : 1,
     bootColor: BOOT_STYLES[progress.boots].color,
+    courtId: progress.court,
     ...teamOptions(homeTeam, awayTeam),
     teamColors: [uniformColors, awayTeam.colors],
   });
@@ -166,8 +176,16 @@ function beginMatch(mode: GameMode = currentMode) {
   paused = false;
   matchProgressRecorded = false;
   queuedAction = undefined;
+  p2QueuedAction = undefined;
   slideQueued = false;
+  p2SlideQueued = false;
+  queuedTrick = undefined;
+  p2QueuedTrick = undefined;
+  slowMotionRemaining = 0;
   latestEvents.clear();
+  eventCalloutTimer = 0;
+  eventCallout.classList.remove('show', 'goal-callout', 'trick-callout');
+  eventCallout.textContent = '';
   intro.classList.add('hidden');
   pausePanel.classList.add('hidden');
   resultPanel.classList.add('hidden');
@@ -179,6 +197,7 @@ function beginMatch(mode: GameMode = currentMode) {
   }
   p2Actions.classList.toggle('hidden', mode !== 'local' || !isTouch);
   p2Joystick.classList.toggle('hidden', mode !== 'local' || !isTouch);
+  p2SkillReadout.classList.toggle('hidden', mode !== 'local');
   el<HTMLElement>('app').classList.toggle('local-duel', mode === 'local');
   document.documentElement.classList.add('match-active');
   if (Capacitor.isNativePlatform()) void ScreenOrientation.lock({ orientation: 'landscape' }).catch(() => undefined);
@@ -277,6 +296,13 @@ function updateHud() {
   el<HTMLElement>('score-away').textContent = String(game.teams[1].score);
   el<HTMLElement>('team-home').textContent = game.teams[0].name.toUpperCase();
   el<HTMLElement>('team-away').textContent = game.teams[1].name.toUpperCase();
+  for (const [index, side] of ['home', 'away'].entries()) {
+    const team = game.teams[index as 0 | 1];
+    const crest = el<HTMLElement>(`crest-${side}`);
+    crest.textContent = team.crest;
+    crest.style.setProperty('--crest-primary', team.primary);
+    crest.style.setProperty('--crest-secondary', team.secondary);
+  }
   el<HTMLElement>('match-kind').textContent = currentMode === 'tournament'
     ? tournamentRoundName(tournament?.round ?? 0).toUpperCase()
     : currentMode === 'local' ? 'DUELO LOCAL' : 'JAULA ABIERTA';
@@ -287,6 +313,18 @@ function updateHud() {
   el<HTMLElement>('skill-meter-fill').style.width = `${skill}%`;
   el<HTMLElement>('skill-meter-label').textContent = ready ? 'LISTO' : `${skill}%`;
   el<HTMLElement>('skill-readout').classList.toggle('ready', ready);
+  const p2Skill = game.skill[1];
+  const p2Ready = canUseSpecialShot(p2Skill);
+  el<HTMLElement>('skill-meter-fill-p2').style.width = `${p2Skill}%`;
+  el<HTMLElement>('skill-meter-label-p2').textContent = p2Ready ? 'LISTO' : `${p2Skill}%`;
+  p2SkillReadout.classList.toggle('ready', p2Ready);
+  const p2ShotButton = document.querySelector<HTMLButtonElement>('[data-p2-action="shoot"]');
+  if (p2ShotButton) {
+    p2ShotButton.classList.toggle('special-ready', p2Ready);
+    p2ShotButton.setAttribute('aria-label', p2Ready ? 'Jugador 2: remate especial' : 'Jugador 2: remate');
+    const label = p2ShotButton.querySelector('b');
+    if (label) label.textContent = p2Ready ? 'ESPECIAL' : 'TIRO';
+  }
   const shotButton = document.querySelector<HTMLButtonElement>('.shoot-action');
   if (shotButton) {
     shotButton.classList.toggle('special-ready', ready);
@@ -315,23 +353,35 @@ function showEvents(dt: number) {
     if (latestEvents.size > 16) latestEvents.clear();
     if (newest.type === 'goal') {
       eventCallout.textContent = newest.text;
+      eventCallout.classList.remove('trick-callout');
       eventCallout.classList.add('show', 'goal-callout');
       eventCalloutTimer = 1.25;
-      renderer.celebrate(newest.team ?? 0);
+      const team = newest.team ?? 0;
+      renderer.celebrate(team, game.teams[team].primary, newest.position);
+      audio.play('goal');
+      slowMotionRemaining = Math.max(slowMotionRemaining, 0.44);
     } else if (newest.type === 'trick') {
       const trick = TRICKS.find((item) => newest.text.startsWith(item.name));
       eventCallout.textContent = trick ? `${trick.direction} ${newest.text}` : newest.text;
       eventCallout.classList.remove('goal-callout');
       eventCallout.classList.add('show', 'trick-callout');
       eventCalloutTimer = 0.85;
+      const color = newest.team !== undefined ? game.teams[newest.team].primary : '#ffdf5c';
+      renderer.emitBurst(newest.position, color, 22, 0.78);
+      audio.play('trick');
+      slowMotionRemaining = Math.max(slowMotionRemaining, 0.28);
     } else if (newest.type === 'bounce' || newest.type === 'save' || newest.type === 'foul') {
       eventCallout.textContent = newest.text;
-      eventCallout.classList.remove('goal-callout');
+      eventCallout.classList.remove('goal-callout', 'trick-callout');
       eventCallout.classList.add('show');
       eventCalloutTimer = 0.65;
+      if (newest.type === 'bounce') audio.play('wall');
+      if (newest.type === 'save') audio.play('save');
+    } else if (newest.type === 'kick') {
+      audio.play('kick');
     }
   }
-  if (eventCalloutTimer <= 0) eventCallout.classList.remove('show', 'goal-callout');
+  if (eventCalloutTimer <= 0) eventCallout.classList.remove('show', 'goal-callout', 'trick-callout');
 }
 
 function frame(now: number) {
@@ -352,7 +402,9 @@ function frame(now: number) {
       action: p2QueuedAction === 'shoot' && canUseSpecialShot(game.skill[1]) ? 'special' : p2QueuedAction,
       trickId: p2QueuedTrick,
     };
-    game = stepMatch(game, controls, dt, game.difficulty, false, secondControls);
+    const gameScale = slowMotionRemaining > 0 ? 0.38 : 1;
+    slowMotionRemaining = Math.max(0, slowMotionRemaining - dt);
+    game = stepMatch(game, controls, dt * gameScale, game.difficulty, false, secondControls);
     queuedAction = undefined;
     p2QueuedAction = undefined;
     slideQueued = false;
@@ -409,10 +461,17 @@ function onLockerChange() {
   progress = selectReward(progress, courtSelect.value);
   persistProgress();
   updateMenuProfile();
+  renderer.setCourt(progress.court);
 }
 uniformSelect.addEventListener('change', onLockerChange);
 bootsSelect.addEventListener('change', onLockerChange);
 courtSelect.addEventListener('change', onLockerChange);
+soundToggle.addEventListener('click', () => {
+  const enabled = audio.toggle();
+  soundToggle.setAttribute('aria-label', enabled ? 'Silenciar sonido' : 'Activar sonido');
+  soundToggle.title = enabled ? 'Silenciar sonido' : 'Activar sonido';
+  soundToggle.classList.toggle('sound-on', enabled);
+});
 
 document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button) => {
   button.addEventListener('pointerdown', (event) => {

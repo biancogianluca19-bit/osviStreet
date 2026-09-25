@@ -5,6 +5,7 @@ export type PlayerRole = 'field' | 'keeper';
 export type MatchPhase = 'kickoff' | 'playing' | 'goal' | 'finished';
 export type ActionId = 'pass' | 'lob' | 'wallpass' | 'shoot' | 'slide' | 'trick' | 'special';
 export type Difficulty = 0 | 1 | 2;
+export type CourtId = 'court-rooftop' | 'court-graffiti' | 'court-beach' | 'court-neon';
 
 export interface Vec2 {
   x: number;
@@ -44,6 +45,7 @@ export interface Ball {
 export interface Team {
   id: TeamId;
   name: string;
+  crest: string;
   primary: string;
   secondary: string;
   score: number;
@@ -80,6 +82,7 @@ export interface MatchState {
   secondSelectedPlayerId: string;
   localPlayers: 1 | 2;
   bootColor: string;
+  courtId: CourtId;
   nextAiAction: number[];
   skill: [number, number];
 }
@@ -99,9 +102,11 @@ export interface MatchOptions {
   targetScore?: number;
   teamNames?: [string, string];
   teamColors?: [[string, string], [string, string]];
+  teamCrests?: [string, string];
   difficulty?: Difficulty;
   localPlayers?: 1 | 2;
   bootColor?: string;
+  courtId?: CourtId;
 }
 
 export const FIELD = {

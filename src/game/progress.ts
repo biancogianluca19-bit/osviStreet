@@ -1,4 +1,5 @@
 import type { BootId, UniformId } from './modes';
+import type { CourtId } from './types';
 
 export interface Reward {
   id: string;
@@ -23,8 +24,10 @@ export interface PlayerProgress {
   unlocked: string[];
   uniform: UniformId;
   boots: BootId;
-  court: string;
+  court: CourtId;
 }
+
+const COURT_IDS: readonly CourtId[] = ['court-rooftop', 'court-graffiti', 'court-beach', 'court-neon'];
 
 export function freshProgress(): PlayerProgress {
   return { wins: 0, matches: 0, unlocked: ['court-rooftop'], uniform: 'candela', boots: 'classic', court: 'court-rooftop' };
@@ -57,7 +60,7 @@ export function parseProgress(serialized: string | null): PlayerProgress {
       unlocked: [...new Set([...defaults.unlocked, ...parsed.unlocked.filter((id): id is string => typeof id === 'string')])],
       uniform: parsed.uniform === 'violet' || parsed.uniform === 'mint' ? parsed.uniform : 'candela',
       boots: parsed.boots === 'neon' || parsed.boots === 'gold' ? parsed.boots : 'classic',
-      court: typeof parsed.court === 'string' && parsed.unlocked.includes(parsed.court) ? parsed.court : 'court-rooftop',
+      court: typeof parsed.court === 'string' && COURT_IDS.includes(parsed.court as CourtId) && parsed.unlocked.includes(parsed.court) ? parsed.court as CourtId : 'court-rooftop',
     };
   } catch {
     return freshProgress();
@@ -70,6 +73,6 @@ export function selectReward(progress: PlayerProgress, id: string): PlayerProgre
   if (id === 'uniform-mint') return { ...progress, uniform: 'mint' };
   if (id === 'boots-neon') return { ...progress, boots: 'neon' };
   if (id === 'boots-gold') return { ...progress, boots: 'gold' };
-  if (id.startsWith('court-')) return { ...progress, court: id };
+  if (COURT_IDS.includes(id as CourtId)) return { ...progress, court: id as CourtId };
   return progress;
 }

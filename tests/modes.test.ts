@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTournament, currentTournamentMatch, recordTournamentResult, STREET_TEAMS } from '../src/game/modes';
+import { createTournament, currentTournamentMatch, recordTournamentResult, STREET_TEAMS, teamOptions } from '../src/game/modes';
 import { freshProgress, parseProgress, recordCompletedMatch, selectReward } from '../src/game/progress';
 import { createMatch, stepMatch } from '../src/game/rules';
 
@@ -10,6 +10,14 @@ describe('Fase 4: modos y recompensas', () => {
     expect(new Set(cup.rounds[0].flatMap((match) => [match.homeId, match.awayId])).size).toBe(8);
     expect(cup.rounds).toHaveLength(3);
     expect(cup.rounds[0].slice(1).every((match) => Boolean(match.winnerId))).toBe(true);
+  });
+
+  it('asigna escudos originales y distintos a los ocho equipos', () => {
+    const crests = STREET_TEAMS.map((team) => team.crest);
+    expect(new Set(crests).size).toBe(8);
+    const [home, away] = STREET_TEAMS;
+    const match = createMatch(teamOptions(home!, away!));
+    expect(match.teams.map((team) => team.crest)).toEqual([home!.crest, away!.crest]);
   });
 
   it('avanza por cuartos, semifinal y final hasta ser campeón', () => {

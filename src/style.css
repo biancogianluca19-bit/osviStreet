@@ -27,7 +27,9 @@ button { color: inherit; }
 .brand-mark { display: grid; place-items: center; width: 31px; height: 31px; color: var(--ink); background: var(--sun); border: 2px solid var(--ink); border-radius: 9px; font-size: 20px; transform: rotate(-6deg); box-shadow: 2px 3px 0 var(--ink); }
 .brand-accent { color: var(--sun); }
 .icon-button { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; color: var(--cream); background: rgba(25, 24, 37, .36); border: 1px solid rgba(255,255,255,.26); border-radius: 50%; font-size: 17px; cursor: pointer; }
-#sound-toggle { display: none; }
+#sound-toggle { opacity: .76; transition: opacity .12s ease, transform .12s ease, background .12s ease; }
+#sound-toggle:hover, #sound-toggle.sound-on { opacity: 1; background: rgba(25, 24, 37, .68); }
+#sound-toggle:active { transform: scale(.91); }
 .intro-panel { position: absolute; z-index: 3; top: 51%; left: clamp(22px, 8.5vw, 135px); width: min(470px, 50vw); transform: translateY(-47%); transition: opacity .22s ease, transform .22s ease; text-shadow: 0 2px 12px rgba(28, 22, 35, .14); }
 .intro-panel.hidden { opacity: 0; transform: translate(-12px, -47%); pointer-events: none; }
 .eyebrow { display: flex; align-items: center; gap: 9px; color: rgba(255, 247, 223, .88); font-size: 10px; line-height: 1.1; font-weight: 800; letter-spacing: .16em; }
@@ -67,6 +69,8 @@ h1, h2, p { margin: 0; }
 .team-score { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .team-score-away { justify-content: flex-end; }
 .team-score strong { color: var(--cream); font: 900 30px/.85 'Barlow Condensed', Impact, sans-serif; }
+.team-crest { position: relative; display: grid; width: 25px; height: 29px; flex: 0 0 25px; place-items: center; clip-path: polygon(7% 0, 93% 0, 100% 65%, 50% 100%, 0 65%); background: var(--crest-primary, #ff5b35); color: #fff8e6; filter: drop-shadow(0 2px 0 var(--ink)); font: 900 8px/1 'Barlow Condensed', Impact, sans-serif; letter-spacing: -.05em; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+.team-crest::before { position: absolute; inset: 3px 4px 6px; border: 1px solid var(--crest-secondary, #ffe76d); content: ''; }
 .score-team { overflow: hidden; color: rgba(255, 249, 230, .9); font: 800 9px/1.1 'Barlow Condensed', 'Arial Narrow', sans-serif; letter-spacing: .07em; white-space: nowrap; text-overflow: ellipsis; }
 .timer-block { display: grid; justify-items: center; gap: 3px; }
 .timer-label { color: var(--mint); font-size: 6px; font-weight: 800; letter-spacing: .12em; white-space: nowrap; }
@@ -110,6 +114,8 @@ h1, h2, p { margin: 0; }
 .skill-meter i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4ce1c0, #ffdf5c, #ff654e); transition: width .25s ease; }
 .skill-readout b { min-width: 22px; color: var(--sun); font-size: 8px; text-align: right; }
 .skill-readout.ready { border-color: rgba(255,223,92,.62); color: var(--sun); box-shadow: 0 0 16px rgba(255,223,92,.12); }
+.second-skill-readout { right: 8px; left: auto; width: 135px; min-width: 135px; transform: none; }
+.p2-shoot-action.special-ready { background: linear-gradient(145deg, #fff27c, #ff7f5c); box-shadow: 0 0 0 2px rgba(255,219,80,.3), 0 4px 10px rgba(16,16,30,.24); }
 .trick-selector { position: absolute; z-index: 11; right: max(15px, env(safe-area-inset-right)); bottom: clamp(119px, 29vmin, 134px); display: flex; width: clamp(212px, 59vw, 240px); flex-direction: column; gap: 6px; padding: 9px; border: 1px solid rgba(255,255,255,.22); border-radius: 11px; background: rgba(25, 24, 39, .9); box-shadow: 0 8px 20px rgba(18,17,30,.27); backdrop-filter: blur(9px); pointer-events: none; }
 .trick-selector.hidden { display: none; }
 .trick-selector strong { overflow: hidden; color: var(--sun); font: 900 8px/1 'Barlow Condensed', Impact, sans-serif; letter-spacing: .12em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }

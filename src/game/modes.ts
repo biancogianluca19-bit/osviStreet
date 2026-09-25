@@ -3,18 +3,19 @@ import type { MatchOptions } from './types';
 export interface StreetTeam {
   id: string;
   name: string;
+  crest: string;
   colors: [string, string];
 }
 
 export const STREET_TEAMS: readonly StreetTeam[] = [
-  { id: 'candela', name: 'Los Candela', colors: ['#ff5b35', '#ffe76d'] },
-  { id: 'coyotes', name: 'Neón Coyotes', colors: ['#24d7c5', '#302b62'] },
-  { id: 'avispas', name: 'Las Avispas', colors: ['#dcfb4e', '#7655de'] },
-  { id: 'mareas', name: 'Mareas Bravas', colors: ['#168ac5', '#f7dd74'] },
-  { id: 'ferro', name: 'Ferro Club', colors: ['#e93761', '#dedde0'] },
-  { id: 'puente', name: 'Lobos del Puente', colors: ['#8b69ff', '#52e39b'] },
-  { id: 'ratas', name: 'Ratas del Techo', colors: ['#ffa13b', '#423144'] },
-  { id: 'fantasma', name: 'Puerto Fantasma', colors: ['#f5f3e5', '#6043a1'] },
+  { id: 'candela', name: 'Los Candela', crest: 'LC', colors: ['#ff5b35', '#ffe76d'] },
+  { id: 'coyotes', name: 'Neón Coyotes', crest: 'NC', colors: ['#24d7c5', '#302b62'] },
+  { id: 'avispas', name: 'Las Avispas', crest: 'AV', colors: ['#dcfb4e', '#7655de'] },
+  { id: 'mareas', name: 'Mareas Bravas', crest: 'MB', colors: ['#168ac5', '#f7dd74'] },
+  { id: 'ferro', name: 'Ferro Club', crest: 'FC', colors: ['#e93761', '#dedde0'] },
+  { id: 'puente', name: 'Lobos del Puente', crest: 'LP', colors: ['#8b69ff', '#52e39b'] },
+  { id: 'ratas', name: 'Ratas del Techo', crest: 'RT', colors: ['#ffa13b', '#423144'] },
+  { id: 'fantasma', name: 'Puerto Fantasma', crest: 'PF', colors: ['#f5f3e5', '#6043a1'] },
 ];
 
 export type TournamentRound = 'Cuartos' | 'Semifinal' | 'Final';
@@ -41,8 +42,8 @@ export function getStreetTeam(id: string): StreetTeam {
   return STREET_TEAMS.find((team) => team.id === id) ?? STREET_TEAMS[0]!;
 }
 
-export function teamOptions(home: StreetTeam, away: StreetTeam): Pick<MatchOptions, 'teamNames' | 'teamColors'> {
-  return { teamNames: [home.name, away.name], teamColors: [home.colors, away.colors] };
+export function teamOptions(home: StreetTeam, away: StreetTeam): Pick<MatchOptions, 'teamNames' | 'teamColors' | 'teamCrests'> {
+  return { teamNames: [home.name, away.name], teamColors: [home.colors, away.colors], teamCrests: [home.crest, away.crest] };
 }
 
 function randomFactory(seed: number) {

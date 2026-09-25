@@ -1,22 +1,67 @@
 import * as THREE from 'three';
-import { FIELD, type Footballer, type MatchState, type TeamId } from './types';
+import { FIELD, type CourtId, type Footballer, type MatchState, type TeamId } from './types';
 
 type ActorView = { root: THREE.Group; pulse?: THREE.Mesh; keeper: boolean };
 
 const colorMaterial = (color: string) => new THREE.MeshToonMaterial({ color });
 
+interface CourtPalette {
+  background: string; fog: string; fogNear: number; fogFar: number;
+  apron: string; floor: string; stripeA: string; stripeB: string;
+  wall: string; rail: string; line: string; goal: string; crowd: string[];
+}
+
+const COURT_PALETTES: Record<CourtId, CourtPalette> = {
+  'court-rooftop': {
+    background: '#ed8954', fog: '#ed8954', fogNear: 27, fogFar: 62,
+    apron: '#ffbd65', floor: '#80bf54', stripeA: '#93cf60', stripeB: '#75b84f',
+    wall: '#ef744e', rail: '#3e2c45', line: '#f9f4d4', goal: '#fff4d8',
+    crowd: ['#ffe45e', '#3ce0c0', '#ff526e', '#8b71ff', '#fff1dd'],
+  },
+  'court-graffiti': {
+    background: '#25445b', fog: '#38566a', fogNear: 25, fogFar: 58,
+    apron: '#e4bd57', floor: '#436577', stripeA: '#4c7180', stripeB: '#3b5b6f',
+    wall: '#29384e', rail: '#171f34', line: '#ffe16b', goal: '#f4db97',
+    crowd: ['#f95ebc', '#50e9d2', '#ffdb58', '#a882ff', '#f6f0d4'],
+  },
+  'court-beach': {
+    background: '#62c4e9', fog: '#97dcf1', fogNear: 30, fogFar: 76,
+    apron: '#d8ad69', floor: '#e9cf8b', stripeA: '#f2dc9e', stripeB: '#dfc27d',
+    wall: '#2395bb', rail: '#fff3c7', line: '#fff7df', goal: '#fff4da',
+    crowd: ['#ff5765', '#f8d547', '#32bfd0', '#fefff0', '#55a866'],
+  },
+  'court-neon': {
+    background: '#160d31', fog: '#2b1c50', fogNear: 24, fogFar: 58,
+    apron: '#392956', floor: '#2c2350', stripeA: '#362960', stripeB: '#292044',
+    wall: '#60409b', rail: '#140f28', line: '#57f5eb', goal: '#f6edff',
+    crowd: ['#ff4ab4', '#59f6e8', '#fff457', '#a470ff', '#fcf0ff'],
+  },
+};
+
+const courtId = (id: string): CourtId => id in COURT_PALETTES ? id as CourtId : 'court-rooftop';
+
 export class MatchRenderer {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(43, 1, 0.1, 120);
+  readonly actorsGroup = new THREE.Group();
   readonly renderer: THREE.WebGLRenderer;
   private actors = new Map<string, ActorView>();
   private ball!: THREE.Group;
   private ballShadow!: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
   private cameraTarget = new THREE.Vector3();
   private arena!: THREE.Group;
+  private arenaLights: THREE.Light[] = [];
+  private currentCourt: CourtId = 'court-rooftop';
+  private ballStreak!: THREE.Group;
+  private particles!: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>;
+  private particlePositions!: Float32Array;
+  private particleVelocities!: Float32Array;
+  private particleColors!: Float32Array;
+  private particleLives!: Float32Array;
+  private particleCursor = 0;
   private requestedPixelScale = 1.5;
 
-  constructor(private readonly host: HTMLElement) {
+  constructor(private readonly host: HTMLElement, initialCourt: CourtId = 'court-rooftop') {
     this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.requestedPixelScale));
     this.renderer.setSize(host.clientWidth, host.clientHeight, false);
@@ -27,9 +72,11 @@ export class MatchRenderer {
     this.renderer.domElement.className = 'game-canvas';
     this.renderer.domElement.setAttribute('aria-label', 'Cancha 3D de osviStreet');
     host.appendChild(this.renderer.domElement);
+    this.arena = new THREE.Group();
+    this.scene.add(this.arena, this.actorsGroup);
     this.camera.position.set(0, 22.5, 18.5);
     this.camera.lookAt(0, 0, 0);
-    this.buildArena();
+    this.buildArena(initialCourt);
     this.buildBall();
     this.resize();
     window.addEventListener('resize', this.resize);
@@ -37,6 +84,15 @@ export class MatchRenderer {
 
   dispose() {
     window.removeEventListener('resize', this.resize);
+    this.disposeGroup(this.arena);
+    this.disposeGroup(this.actorsGroup);
+    this.particles?.geometry.dispose();
+    this.particles?.material.dispose();
+    this.disposeGroup(this.ball);
+    this.disposeGroup(this.ballStreak);
+    this.ballShadow?.geometry.dispose();
+    this.ballShadow?.material.dispose();
+    this.arenaLights.forEach((light) => this.scene.remove(light));
     this.renderer.dispose();
     this.host.replaceChildren();
   }
@@ -55,33 +111,49 @@ export class MatchRenderer {
     this.resize();
   }
 
-  private buildArena() {
-    this.scene.background = new THREE.Color('#ed8954');
-    this.scene.fog = new THREE.Fog('#ed8954', 27, 62);
-    this.scene.add(new THREE.HemisphereLight('#d8fdff', '#51415a', 2.1));
-    const sun = new THREE.DirectionalLight('#fff6c4', 3.1);
+  setCourt(id: string) {
+    const nextCourt = courtId(id);
+    if (nextCourt === this.currentCourt) return;
+    this.clearGroup(this.arena);
+    this.buildArena(nextCourt);
+  }
+
+  resetActors() {
+    this.clearGroup(this.actorsGroup);
+    this.actors.clear();
+  }
+
+  private buildArena(id: CourtId) {
+    this.currentCourt = id;
+    const palette = COURT_PALETTES[id];
+    this.scene.background = new THREE.Color(palette.background);
+    this.scene.fog = new THREE.Fog(palette.fog, palette.fogNear, palette.fogFar);
+    this.renderer.setClearColor(palette.background, 1);
+    this.arenaLights.forEach((light) => this.scene.remove(light));
+    const hemi = new THREE.HemisphereLight(id === 'court-neon' ? '#8edbff' : '#d8fdff', '#51415a', id === 'court-neon' ? 1.5 : 2.1);
+    this.scene.add(hemi);
+    const sun = new THREE.DirectionalLight(id === 'court-beach' ? '#fff1bd' : '#fff6c4', id === 'court-neon' ? 1.9 : 3.1);
     sun.position.set(-9, 19, -7);
     this.scene.add(sun);
-    this.arena = new THREE.Group();
-    this.scene.add(this.arena);
+    this.arenaLights = [hemi, sun];
 
-    const apron = new THREE.Mesh(new THREE.BoxGeometry(27.8, 0.45, 17.6), colorMaterial('#ffbd65'));
+    const apron = new THREE.Mesh(new THREE.BoxGeometry(27.8, 0.45, 17.6), colorMaterial(palette.apron));
     apron.position.y = -0.37;
     this.arena.add(apron);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(FIELD.halfLength * 2, FIELD.halfWidth * 2), colorMaterial('#80bf54'));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(FIELD.halfLength * 2, FIELD.halfWidth * 2), colorMaterial(palette.floor));
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -0.12;
     this.arena.add(floor);
 
-    const stripe = colorMaterial('#93cf60');
-    const stripe2 = colorMaterial('#75b84f');
+    const stripe = colorMaterial(palette.stripeA);
+    const stripe2 = colorMaterial(palette.stripeB);
     for (let index = 0; index < 6; index++) {
       const panel = new THREE.Mesh(new THREE.PlaneGeometry(4, FIELD.halfWidth * 2), index % 2 ? stripe : stripe2);
       panel.rotation.x = -Math.PI / 2;
       panel.position.set(-10 + index * 4, -0.105, 0);
       this.arena.add(panel);
     }
-    const lineMat = new THREE.MeshBasicMaterial({ color: '#f9f4d4' });
+    const lineMat = new THREE.MeshBasicMaterial({ color: palette.line });
     const addLine = (width: number, depth: number, x: number, z: number) => {
       const line = new THREE.Mesh(new THREE.BoxGeometry(width, 0.025, depth), lineMat);
       line.position.set(x, -0.075, z);
@@ -98,23 +170,24 @@ export class MatchRenderer {
       addLine(0.09, 5.5, side * 9.4, 0);
       addLine(5.2, 0.09, side * 9.4, -2.72);
       addLine(5.2, 0.09, side * 9.4, 2.72);
-      this.buildGoal(side);
+      this.buildGoal(side, palette);
     }
-    this.buildWalls();
-    this.buildCrowdProps();
+    this.buildWalls(palette);
+    this.buildCrowdProps(palette);
+    this.buildCourtIdentity(id);
   }
 
-  private buildGoal(side: number) {
+  private buildGoal(side: number, palette: CourtPalette) {
     const goal = new THREE.Group();
-    const postMaterial = colorMaterial('#fff4d8');
+    const postMaterial = colorMaterial(palette.goal);
     const postGeometry = new THREE.CylinderGeometry(0.095, 0.095, 2.65, 8);
     const postX = side * 12.05;
-    for (const z of [-2, 2]) {
+    for (const z of [-FIELD.goalHalfWidth, FIELD.goalHalfWidth]) {
       const post = new THREE.Mesh(postGeometry, postMaterial);
       post.position.set(postX, 1.22, z);
       goal.add(post);
     }
-    const crossbar = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, 4.05), postMaterial);
+    const crossbar = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, FIELD.goalHalfWidth * 2 + 0.15), postMaterial);
     crossbar.position.set(postX, 2.52, 0);
     goal.add(crossbar);
     const netMaterial = new THREE.LineBasicMaterial({ color: '#fff7d4', transparent: true, opacity: 0.58 });
@@ -123,14 +196,18 @@ export class MatchRenderer {
       goal.add(new THREE.Line(geometry, netMaterial));
     };
     const backX = side * 13;
-    for (const z of [-2, -1, 0, 1, 2]) addNetLine([new THREE.Vector3(postX, 0.1, z), new THREE.Vector3(backX, 0.1, z)]);
-    for (const y of [0.15, 0.75, 1.35, 1.95, 2.52]) addNetLine([new THREE.Vector3(postX, y, -2), new THREE.Vector3(backX, y, -2), new THREE.Vector3(backX, y, 2), new THREE.Vector3(postX, y, 2)]);
+    const halfWidth = FIELD.goalHalfWidth;
+    for (let index = 0; index <= 4; index++) {
+      const z = -halfWidth + index * halfWidth / 2;
+      addNetLine([new THREE.Vector3(postX, 0.1, z), new THREE.Vector3(backX, 0.1, z)]);
+    }
+    for (const y of [0.15, 0.75, 1.35, 1.95, 2.52]) addNetLine([new THREE.Vector3(postX, y, -halfWidth), new THREE.Vector3(backX, y, -halfWidth), new THREE.Vector3(backX, y, halfWidth), new THREE.Vector3(postX, y, halfWidth)]);
     this.arena.add(goal);
   }
 
-  private buildWalls() {
-    const wallMat = colorMaterial('#ef744e');
-    const railMat = new THREE.MeshBasicMaterial({ color: '#3e2c45' });
+  private buildWalls(palette: CourtPalette) {
+    const wallMat = colorMaterial(palette.wall);
+    const railMat = new THREE.MeshBasicMaterial({ color: palette.rail });
     for (const z of [-7.55, 7.55]) {
       const wall = new THREE.Mesh(new THREE.BoxGeometry(24.8, 1.7, 0.32), wallMat);
       wall.position.set(0, 0.65, z);
@@ -156,8 +233,8 @@ export class MatchRenderer {
     this.arena.add(perimeter);
   }
 
-  private buildCrowdProps() {
-    const colorSet = ['#ffe45e', '#3ce0c0', '#ff526e', '#8b71ff', '#fff1dd'];
+  private buildCrowdProps(palette: CourtPalette) {
+    const colorSet = palette.crowd;
     for (let i = 0; i < 34; i++) {
       const x = -12.5 + (i % 17) * 1.55;
       const z = i < 17 ? -8.6 : 8.6;
@@ -168,6 +245,104 @@ export class MatchRenderer {
       head.position.set(x, 0.58, z);
       this.arena.add(head);
     }
+  }
+
+  private buildCourtIdentity(id: CourtId) {
+    if (id === 'court-rooftop') {
+      const blocks = ['#514061', '#65506f', '#354159', '#7a4c62', '#423b56'];
+      for (let index = 0; index < 10; index++) {
+        const height = 1.7 + ((index * 17) % 5) * 0.54;
+        const building = new THREE.Mesh(new THREE.BoxGeometry(2.2 + (index % 3) * 0.4, height, 1.9), colorMaterial(blocks[index % blocks.length]!));
+        building.position.set(-13.5 + index * 3, height / 2 - 0.35, -10.2);
+        this.arena.add(building);
+        const windows = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.04), new THREE.MeshBasicMaterial({ color: index % 2 ? '#ffd880' : '#ffbca0' }));
+        windows.position.set(building.position.x, height * 0.54, -9.18);
+        this.arena.add(windows);
+      }
+      for (let index = 0; index < 14; index++) {
+        const star = new THREE.Mesh(new THREE.SphereGeometry(0.055, 5, 4), new THREE.MeshBasicMaterial({ color: '#fff0ae' }));
+        star.position.set(-13 + (index * 2.1) % 26, 5 + (index % 3) * 0.72, -12.5);
+        this.arena.add(star);
+      }
+    } else if (id === 'court-graffiti') {
+      const colors = ['#ff4fb6', '#56e7d1', '#ffdf51', '#996eff', '#ff704d'];
+      for (const side of [-1, 1]) {
+        for (let index = 0; index < 12; index++) {
+          const x = -11.6 + index * 2.1;
+          const size = 0.24 + (index % 4) * 0.075;
+          const tag = new THREE.Mesh(new THREE.CircleGeometry(size, 8), new THREE.MeshBasicMaterial({ color: colors[index % colors.length]!, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }));
+          tag.position.set(x, 0.78 + (index % 3) * 0.28, side * 7.34);
+          this.arena.add(tag);
+          const slash = new THREE.Mesh(new THREE.BoxGeometry(size * 2.6, 0.075, 0.035), new THREE.MeshBasicMaterial({ color: colors[(index + 2) % colors.length]! }));
+          slash.position.set(x, 0.75 + (index % 3) * 0.28, side * 7.31);
+          slash.rotation.z = (index % 2 ? -1 : 1) * 0.62;
+          this.arena.add(slash);
+        }
+      }
+    } else if (id === 'court-beach') {
+      for (const side of [-1, 1]) {
+        const sea = new THREE.Mesh(new THREE.BoxGeometry(30, 0.08, 4.2), colorMaterial('#55c9df'));
+        sea.position.set(0, -0.31, side * 10.45);
+        this.arena.add(sea);
+        const foam = new THREE.Mesh(new THREE.BoxGeometry(30, 0.06, 0.2), colorMaterial('#fff4da'));
+        foam.position.set(0, -0.25, side * 8.68);
+        this.arena.add(foam);
+        for (let index = 0; index < 3; index++) {
+          const x = -9.5 + index * 9.5;
+          const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 3.1, 7), colorMaterial('#a97449'));
+          trunk.position.set(x, 1.08, side * 9.5);
+          trunk.rotation.z = x > 1 ? -0.12 : 0.12;
+          this.arena.add(trunk);
+          for (let leaf = 0; leaf < 5; leaf++) {
+            const frond = new THREE.Mesh(new THREE.ConeGeometry(0.16, 2.2, 5), colorMaterial(leaf % 2 ? '#308965' : '#48a55f'));
+            frond.position.set(x + Math.cos(leaf * 1.25) * 0.77, 2.63 + Math.sin(leaf * 0.7) * 0.12, side * 9.5 + Math.sin(leaf * 1.25) * 0.74);
+            frond.rotation.z = -Math.cos(leaf * 1.25) * 0.85;
+            frond.rotation.x = Math.sin(leaf * 1.25) * 0.72;
+            this.arena.add(frond);
+          }
+        }
+      }
+      for (let index = 0; index < 5; index++) {
+        const umbrella = new THREE.Mesh(new THREE.ConeGeometry(0.72, 0.25, 10), colorMaterial(index % 2 ? '#fa6756' : '#f6df77'));
+        umbrella.position.set(-10 + index * 5, 1.5, index % 2 ? 9 : -9);
+        umbrella.rotation.x = Math.PI;
+        this.arena.add(umbrella);
+      }
+    } else {
+      for (const side of [-1, 1]) {
+        for (let index = 0; index < 13; index++) {
+          const bar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.78, 0.16), new THREE.MeshBasicMaterial({ color: index % 2 ? '#5bf3e8' : '#ff53bd' }));
+          bar.position.set(-11.7 + index * 1.95, 0.75, side * 7.27);
+          this.arena.add(bar);
+        }
+      }
+      for (const [x, color] of [[-8, '#ff42bb'], [0, '#4ff3ec'], [8, '#b685ff']] as const) {
+        const lamp = new THREE.PointLight(color, 7.5, 15, 2);
+        lamp.position.set(x, 5.2, x ? (Math.sign(x) * -4) : 0);
+        this.scene.add(lamp);
+        this.arenaLights.push(lamp);
+        const glow = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.13, 0.35), new THREE.MeshBasicMaterial({ color }));
+        glow.position.copy(lamp.position);
+        this.arena.add(glow);
+      }
+      const grid = new THREE.Mesh(new THREE.BoxGeometry(25, 0.05, 0.12), new THREE.MeshBasicMaterial({ color: '#53f4ee' }));
+      grid.position.set(0, 0.02, 0);
+      this.arena.add(grid);
+    }
+  }
+
+  private clearGroup(group: THREE.Group) {
+    group.traverse((object) => {
+      if (!(object instanceof THREE.Mesh) && !(object instanceof THREE.Line) && !(object instanceof THREE.Points)) return;
+      object.geometry.dispose();
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => material.dispose());
+    });
+    group.clear();
+  }
+
+  private disposeGroup(group: THREE.Group) {
+    this.clearGroup(group);
   }
 
   private outline(geometry: THREE.BufferGeometry, color: string, scale = 1) {
@@ -244,13 +419,73 @@ export class MatchRenderer {
     this.ballShadow.rotation.x = -Math.PI / 2;
     this.ballShadow.position.y = 0.012;
     this.scene.add(this.ballShadow);
+    this.ballStreak = new THREE.Group();
+    for (let index = 0; index < 5; index++) {
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(FIELD.ballRadius * (0.88 - index * 0.14), 7, 5), new THREE.MeshBasicMaterial({ color: index % 2 ? '#ffdf5c' : '#ffffff', transparent: true, opacity: 0.19 - index * 0.027, depthWrite: false }));
+      this.ballStreak.add(bead);
+    }
+    this.scene.add(this.ballStreak);
+    this.createParticles();
+  }
+
+  private createParticles() {
+    const count = 72;
+    this.particlePositions = new Float32Array(count * 3);
+    this.particleVelocities = new Float32Array(count * 3);
+    this.particleColors = new Float32Array(count * 3);
+    this.particleLives = new Float32Array(count);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(this.particlePositions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(this.particleColors, 3));
+    const material = new THREE.PointsMaterial({ size: 0.17, vertexColors: true, transparent: true, opacity: 0.94, depthWrite: false, sizeAttenuation: true });
+    this.particles = new THREE.Points(geometry, material);
+    this.particles.visible = false;
+    this.scene.add(this.particles);
+  }
+
+  emitBurst(position: { x: number; z: number }, color: string, count = 18, height = 1.2) {
+    const tint = new THREE.Color(color);
+    for (let index = 0; index < count; index++) {
+      const slot = this.particleCursor++ % this.particleLives.length;
+      const offset = slot * 3;
+      this.particlePositions[offset] = position.x + (Math.random() - 0.5) * 0.85;
+      this.particlePositions[offset + 1] = height + Math.random() * 0.7;
+      this.particlePositions[offset + 2] = position.z + (Math.random() - 0.5) * 0.85;
+      this.particleVelocities[offset] = (Math.random() - 0.5) * 4.8;
+      this.particleVelocities[offset + 1] = 1.2 + Math.random() * 4.1;
+      this.particleVelocities[offset + 2] = (Math.random() - 0.5) * 4.8;
+      this.particleColors[offset] = tint.r;
+      this.particleColors[offset + 1] = tint.g;
+      this.particleColors[offset + 2] = tint.b;
+      this.particleLives[slot] = 0.7 + Math.random() * 0.55;
+    }
+    this.particles.visible = true;
+    this.particles.geometry.attributes.position.needsUpdate = true;
+    this.particles.geometry.attributes.color.needsUpdate = true;
+  }
+
+  private updateParticles(dt: number) {
+    let active = false;
+    for (let slot = 0; slot < this.particleLives.length; slot++) {
+      const life = Math.max(0, this.particleLives[slot]! - dt);
+      this.particleLives[slot] = life;
+      if (!life) continue;
+      active = true;
+      const offset = slot * 3;
+      this.particlePositions[offset] += this.particleVelocities[offset]! * dt;
+      this.particlePositions[offset + 1] += this.particleVelocities[offset + 1]! * dt;
+      this.particlePositions[offset + 2] += this.particleVelocities[offset + 2]! * dt;
+      this.particleVelocities[offset + 1] -= 5.8 * dt;
+    }
+    this.particles.visible = active;
+    this.particles.geometry.attributes.position.needsUpdate = true;
   }
 
   render(state: MatchState, dt: number) {
     const living = new Set(state.players.map((p) => p.id));
     for (const [id, view] of this.actors) {
       if (!living.has(id)) {
-        this.arena.remove(view.root);
+        this.actorsGroup.remove(view.root);
         this.actors.delete(id);
       }
     }
@@ -260,7 +495,7 @@ export class MatchRenderer {
         const colors = [state.teams[player.team].primary, state.teams[player.team].secondary] as [string, string];
         view = this.createActor(player, colors, state.bootColor);
         this.actors.set(player.id, view);
-        this.arena.add(view.root);
+        this.actorsGroup.add(view.root);
       }
       view.root.position.set(player.position.x, 0, player.position.z);
       const facing = -Math.atan2(player.facing.z, player.facing.x);
@@ -285,14 +520,22 @@ export class MatchRenderer {
     this.ballShadow.scale.setScalar(airScale);
     this.ballShadow.material.opacity = Math.max(0.06, 0.23 - ball.height * 0.05);
     this.ball.scale.setScalar(ball.specialShot ? 1.2 : 1);
+    this.ballStreak.visible = ball.trailTimer > 0;
+    const speed = Math.hypot(ball.velocity.x, ball.velocity.z) || 1;
+    this.ballStreak.children.forEach((bead, index) => {
+      const distance = 0.12 + index * 0.17;
+      bead.position.set(ball.position.x - ball.velocity.x / speed * distance, ball.height, ball.position.z - ball.velocity.z / speed * distance);
+    });
     const target = new THREE.Vector3(ball.position.x * 0.13, 0, ball.position.z * 0.12);
     this.cameraTarget.lerp(target, 1 - Math.exp(-dt * 1.2));
     this.camera.lookAt(this.cameraTarget);
+    this.updateParticles(dt);
     this.renderer.render(this.scene, this.camera);
   }
 
-  celebrate(team: TeamId) {
+  celebrate(team: TeamId, color: string, position: { x: number; z: number }) {
+    this.emitBurst(position, color, 64, 0.8);
     this.scene.background = new THREE.Color(team === 0 ? '#ffb455' : '#53ccbc');
-    window.setTimeout(() => { this.scene.background = new THREE.Color('#ed8954'); }, 620);
+    window.setTimeout(() => { this.scene.background = new THREE.Color(COURT_PALETTES[this.currentCourt].background); }, 620);
   }
 }

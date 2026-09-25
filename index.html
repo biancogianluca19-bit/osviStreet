@@ -28,11 +28,12 @@
         <div class="intro-meta"><span>3 MINUTOS</span><i></i><span>PRIMERO A 5</span><i></i><span>SIN OFFSIDE</span></div>
       </section>
       <section class="match-hud hidden" id="match-hud" aria-label="Marcador">
-        <div class="team-score team-score-home"><span class="score-team" id="team-home">LOS CANDELA</span><strong id="score-home">0</strong></div>
+        <div class="team-score team-score-home"><span class="team-crest" id="crest-home" aria-hidden="true">LC</span><span class="score-team" id="team-home">LOS CANDELA</span><strong id="score-home">0</strong></div>
         <div class="timer-block"><span class="timer-label" id="match-kind">JAULA ABIERTA</span><strong id="match-timer">3:00</strong></div>
-        <div class="team-score team-score-away"><strong id="score-away">0</strong><span class="score-team" id="team-away">BARRIO NORTE</span></div>
+        <div class="team-score team-score-away"><strong id="score-away">0</strong><span class="team-crest" id="crest-away" aria-hidden="true">BN</span><span class="score-team" id="team-away">BARRIO NORTE</span></div>
         <button class="pause-button" id="pause-match" aria-label="Pausar partido">Ⅱ</button>
         <div class="skill-readout" id="skill-readout"><span>ESTILO</span><div class="skill-meter"><i id="skill-meter-fill"></i></div><b id="skill-meter-label">0%</b></div>
+        <div class="skill-readout second-skill-readout hidden" id="skill-readout-p2"><span>ESTILO P2</span><div class="skill-meter"><i id="skill-meter-fill-p2"></i></div><b id="skill-meter-label-p2">0%</b></div>
       </section>
       <div class="event-callout" id="event-callout" aria-live="polite"></div>
       <section class="touch-ui hidden" id="touch-ui" aria-label="Controles del partido">

@@ -6,6 +6,7 @@ import { createTeamAiControls } from './ai';
 
 const DEFAULT_TEAMS: [string, string] = ['Los Candela', 'Barrio Norte'];
 const DEFAULT_COLORS: [[string, string], [string, string]] = [['#ff5b35', '#ffe76d'], ['#2bd9c0', '#332b62']];
+const DEFAULT_CRESTS: [string, string] = ['LC', 'BN'];
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 const length = (v: Vec2) => Math.hypot(v.x, v.z);
 const normalize = (v: Vec2): Vec2 => {
@@ -17,6 +18,7 @@ const toward = (from: Vec2, to: Vec2) => normalize({ x: to.x - from.x, z: to.z -
 export function createMatch(options: MatchOptions = {}): MatchState {
   const names = options.teamNames ?? DEFAULT_TEAMS;
   const colors = options.teamColors ?? DEFAULT_COLORS;
+  const crests = options.teamCrests ?? DEFAULT_CRESTS;
   const players: Footballer[] = [];
   const fieldRows = [-3.45, -1.15, 1.15, 3.45];
   for (const team of [0, 1] as const) {
@@ -58,12 +60,13 @@ export function createMatch(options: MatchOptions = {}): MatchState {
     frame: 0, seed: options.seed ?? 2025,
     difficulty: options.difficulty ?? 1, targetScore: options.targetScore ?? FIELD.targetScore,
     teams: [
-      { id: 0, name: names[0], primary: colors[0][0], secondary: colors[0][1], score: 0, shots: 0, saves: 0 },
-      { id: 1, name: names[1], primary: colors[1][0], secondary: colors[1][1], score: 0, shots: 0, saves: 0 },
+      { id: 0, name: names[0], crest: crests[0], primary: colors[0][0], secondary: colors[0][1], score: 0, shots: 0, saves: 0 },
+      { id: 1, name: names[1], crest: crests[1], primary: colors[1][0], secondary: colors[1][1], score: 0, shots: 0, saves: 0 },
     ],
     players, ball, events: [], eventId: 0, kickoffTimer: 0.65, kickoffTeam: 0,
     selectedPlayerId: 't0-p1', secondSelectedPlayerId: 't1-p1',
     localPlayers: options.localPlayers ?? 1, bootColor: options.bootColor ?? '#fff1d2',
+    courtId: options.courtId ?? 'court-rooftop',
     nextAiAction: [0.6, 0.3], skill: [0, 0],
   };
   pushEvent(state, 'kick', '¡A jugar!', 0, { x: 0, z: 0 });

@@ -4,7 +4,7 @@ export default defineConfig({
   base: process.env.VITE_BASE_PATH || './',
   build: {
     target: 'es2022',
-    sourcemap: true,
+    sourcemap: false,
   },
   server: { host: '0.0.0.0' },
   test: {
