@@ -1,3 +1,5 @@
+import type { TrickId } from './tricks';
+
 export type TeamId = 0 | 1;
 export type PlayerRole = 'field' | 'keeper';
 export type MatchPhase = 'kickoff' | 'playing' | 'goal' | 'finished';
@@ -20,7 +22,8 @@ export interface Footballer {
   stun: number;
   tackleCooldown: number;
   trickCooldown: number;
-  trickId?: string;
+  trickId?: TrickId;
+  trickTimer: number;
   celebration: number;
 }
 
@@ -79,7 +82,7 @@ export interface PlayerControls {
   slide: boolean;
   action?: ActionId;
   special?: boolean;
-  trickId?: string;
+  trickId?: TrickId;
 }
 
 export interface MatchOptions {

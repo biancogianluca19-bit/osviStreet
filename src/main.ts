@@ -11,6 +11,8 @@ import '@fontsource/dm-sans/800.css';
 import './style.css';
 import { createMatch, stepMatch } from './game/rules';
 import { type ActionId, type MatchState, type PlayerControls, type Vec2 } from './game/types';
+import { DEFAULT_TRICK, TRICK_SWIPE_THRESHOLD, TRICKS, trickFromSwipe, type TrickId } from './game/tricks';
+import { canUseSpecialShot } from './game/styleMeter';
 import { MatchRenderer } from './game/renderer';
 
 const el = <T extends HTMLElement>(id: string) => {
@@ -29,6 +31,9 @@ const resultPanel = el<HTMLElement>('result-panel');
 const joystick = el<HTMLDivElement>('joystick');
 const knob = el<HTMLDivElement>('joystick-knob');
 const eventCallout = el<HTMLDivElement>('event-callout');
+const trickButton = el<HTMLButtonElement>('trick-button');
+const trickSelector = el<HTMLDivElement>('trick-selector');
+const trickPreview = el<HTMLElement>('trick-preview');
 const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 
 let game: MatchState = createMatch();
@@ -48,6 +53,9 @@ let joystickMove: Vec2 = { x: 0, z: 0 };
 let sprintHeld = false;
 let queuedAction: ActionId | undefined;
 let slideQueued = false;
+let queuedTrick: TrickId | undefined;
+let trickPointer: number | null = null;
+let trickOrigin = { x: 0, y: 0 };
 let lastTime = performance.now();
 let qualityWindowStart = lastTime;
 let qualityFrames = 0;
@@ -121,6 +129,18 @@ function updateHud() {
   el<HTMLElement>('team-away').textContent = game.teams[1].name.toUpperCase();
   const seconds = Math.max(0, Math.ceil(game.remaining));
   el<HTMLElement>('match-timer').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const skill = game.skill[0];
+  const ready = canUseSpecialShot(skill);
+  el<HTMLElement>('skill-meter-fill').style.width = `${skill}%`;
+  el<HTMLElement>('skill-meter-label').textContent = ready ? 'LISTO' : `${skill}%`;
+  el<HTMLElement>('skill-readout').classList.toggle('ready', ready);
+  const shotButton = document.querySelector<HTMLButtonElement>('.shoot-action');
+  if (shotButton) {
+    shotButton.classList.toggle('special-ready', ready);
+    shotButton.setAttribute('aria-label', ready ? 'Remate especial' : 'Remate');
+    const label = shotButton.querySelector('b');
+    if (label) label.textContent = ready ? 'ESPECIAL' : 'REMATE';
+  }
 }
 
 function readMovement(): Vec2 {
@@ -141,6 +161,12 @@ function showEvents(dt: number) {
       eventCallout.classList.add('show', 'goal-callout');
       eventCalloutTimer = 1.25;
       renderer.celebrate(newest.team ?? 0);
+    } else if (newest.type === 'trick') {
+      const trick = TRICKS.find((item) => newest.text.startsWith(item.name));
+      eventCallout.textContent = trick ? `${trick.direction} ${newest.text}` : newest.text;
+      eventCallout.classList.remove('goal-callout');
+      eventCallout.classList.add('show', 'trick-callout');
+      eventCalloutTimer = 0.85;
     } else if (newest.type === 'bounce' || newest.type === 'save' || newest.type === 'foul') {
       eventCallout.textContent = newest.text;
       eventCallout.classList.remove('goal-callout');
@@ -160,10 +186,12 @@ function frame(now: number) {
       sprint: sprintHeld || keys.has('shift'),
       slide: slideQueued,
       action: queuedAction,
+      trickId: queuedTrick,
     };
     game = stepMatch(game, controls, dt);
     queuedAction = undefined;
     slideQueued = false;
+    queuedTrick = undefined;
     updateHud();
     showEvents(dt);
     if (game.phase === 'finished') finishMatch();
@@ -186,7 +214,7 @@ function frame(now: number) {
 function queueAction(action: ActionId) {
   if (!running || paused) return;
   if (action === 'slide') slideQueued = true;
-  else queuedAction = action;
+  else queuedAction = action === 'shoot' && canUseSpecialShot(game.skill[0]) ? 'special' : action;
 }
 
 el<HTMLButtonElement>('start-match').addEventListener('click', beginMatch);
@@ -207,6 +235,48 @@ document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button) =
 const sprintButton = document.querySelector<HTMLButtonElement>('[data-hold="sprint"]');
 sprintButton?.addEventListener('pointerdown', (event) => { event.preventDefault(); sprintHeld = true; sprintButton.classList.add('pressed'); });
 for (const end of ['pointerup', 'pointercancel', 'pointerleave']) sprintButton?.addEventListener(end, () => { sprintHeld = false; sprintButton.classList.remove('pressed'); });
+
+function selectTrickPreview(trickId: TrickId) {
+  const trick = TRICKS.find((item) => item.id === trickId) ?? TRICKS[2];
+  trickPreview.textContent = `${trick.direction} ${trick.name} · SOLTÁ PARA HACERLO`;
+  trickSelector.querySelectorAll<HTMLElement>('[data-trick]').forEach((option) => {
+    option.classList.toggle('selected', option.dataset.trick === trickId);
+  });
+}
+
+trickButton.addEventListener('pointerdown', (event) => {
+  if (!running || paused) return;
+  event.preventDefault();
+  trickPointer = event.pointerId;
+  trickOrigin = { x: event.clientX, y: event.clientY };
+  trickButton.setPointerCapture(event.pointerId);
+  trickButton.classList.add('pressed');
+  trickSelector.classList.remove('hidden');
+  trickPreview.textContent = 'DESLIZÁ PARA ELEGIR';
+  selectTrickPreview(DEFAULT_TRICK);
+});
+trickButton.addEventListener('pointermove', (event) => {
+  if (event.pointerId !== trickPointer) return;
+  const dx = event.clientX - trickOrigin.x;
+  const dy = event.clientY - trickOrigin.y;
+  if (Math.hypot(dx, dy) >= TRICK_SWIPE_THRESHOLD) selectTrickPreview(trickFromSwipe(dx, dy));
+});
+trickButton.addEventListener('pointerup', (event) => {
+  if (event.pointerId !== trickPointer) return;
+  const dx = event.clientX - trickOrigin.x;
+  const dy = event.clientY - trickOrigin.y;
+  queuedTrick = Math.hypot(dx, dy) >= TRICK_SWIPE_THRESHOLD ? trickFromSwipe(dx, dy) : DEFAULT_TRICK;
+  const selected = TRICKS.find((item) => item.id === queuedTrick) ?? TRICKS[2];
+  trickPreview.textContent = `${selected.direction} ${selected.name}`;
+  trickPointer = null;
+  trickButton.classList.remove('pressed');
+  window.setTimeout(() => trickSelector.classList.add('hidden'), 260);
+});
+trickButton.addEventListener('pointercancel', () => {
+  trickPointer = null;
+  trickButton.classList.remove('pressed');
+  trickSelector.classList.add('hidden');
+});
 
 joystick.addEventListener('pointerdown', (event) => {
   if (!isTouch || paused) return;
@@ -244,13 +314,14 @@ function moveJoystick(x: number, y: number) {
 const keyMap: Record<string, string> = { ArrowUp: 'w', ArrowDown: 's', ArrowLeft: 'a', ArrowRight: 'd', ' ': 'space' };
 window.addEventListener('keydown', (event) => {
   const key = keyMap[event.key] ?? event.key.toLowerCase();
-  if (['w', 'a', 's', 'd', 'shift', 'space', 'j', 'k', 'l', 'escape'].includes(key)) event.preventDefault();
+  if (['w', 'a', 's', 'd', 'shift', 'space', 'j', 'k', 'l', 't', 'escape'].includes(key)) event.preventDefault();
   if (event.repeat) return;
   keys.add(key);
   if (key === 'space') queueAction('shoot');
   if (key === 'j') queueAction('pass');
   if (key === 'k') queueAction('lob');
   if (key === 'l') queueAction('slide');
+  if (key === 't' && running && !paused) queuedTrick = DEFAULT_TRICK;
   if (key === 'escape') paused ? resumeMatch() : pauseMatch();
 });
 window.addEventListener('keyup', (event) => keys.delete(keyMap[event.key] ?? event.key.toLowerCase()));

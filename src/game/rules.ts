@@ -1,5 +1,7 @@
 import { FIELD, type ActionId, type Ball, type Footballer, type GameEvent, type MatchOptions, type MatchState, type PlayerControls, type TeamId, type Vec2 } from './types';
 import { stepBall } from './physics';
+import { trickById } from './tricks';
+import { addStyle, canUseSpecialShot, HUMILIATION_STYLE_BONUS, spendSpecialShot } from './styleMeter';
 
 const DEFAULT_TEAMS: [string, string] = ['Los Candela', 'Barrio Norte'];
 const DEFAULT_COLORS: [[string, string], [string, string]] = [['#ff5b35', '#ffe76d'], ['#2bd9c0', '#332b62']];
@@ -32,6 +34,7 @@ export function createMatch(options: MatchOptions = {}): MatchState {
         stun: 0,
         tackleCooldown: 0,
         trickCooldown: 0,
+        trickTimer: 0,
         celebration: 0,
       });
     });
@@ -40,6 +43,7 @@ export function createMatch(options: MatchOptions = {}): MatchState {
       position: { x: team === 0 ? -10.35 : 10.35, z: 0 },
       velocity: { x: 0, z: 0 }, facing: { x: attack, z: 0 }, stamina: 1,
       actionCooldown: 0, stun: 0, tackleCooldown: 0, trickCooldown: 0, celebration: 0,
+      trickTimer: 0,
     });
   }
   const ball: Ball = {
@@ -66,7 +70,9 @@ function pushEvent(state: MatchState, type: GameEvent['type'], text: string, tea
   if (state.events.length > 10) state.events.splice(0, state.events.length - 10);
 }
 
-function kick(state: MatchState, player: Footballer, action: ActionId) {
+function kick(state: MatchState, player: Footballer, requestedAction: ActionId) {
+  if (requestedAction === 'special' && !canUseSpecialShot(state.skill[player.team])) return;
+  const action: ActionId = requestedAction === 'shoot' && canUseSpecialShot(state.skill[player.team]) ? 'special' : requestedAction;
   const towardGoal = player.team === 0 ? 1 : -1;
   const available = state.players.filter((p) => p.team === player.team && p.id !== player.id && p.role === 'field');
   const receiver = available.sort((a, b) => {
@@ -78,7 +84,8 @@ function kick(state: MatchState, player: Footballer, action: ActionId) {
     ? toward(player.position, receiver?.position ?? { x: player.position.x + towardGoal, z: player.position.z })
     : (length(player.facing) > 0.1 ? normalize(player.facing) : { x: towardGoal, z: 0 });
   const shot = action === 'shoot' || action === 'special';
-  const speed = action === 'lob' ? 10.8 : shot ? (action === 'special' ? 19 : 15.5) : 9.3;
+  const trickBonus = player.trickTimer > 0 && player.trickId === 'bicicleta' && shot ? 1.14 : 1;
+  const speed = (action === 'lob' ? 10.8 : shot ? (action === 'special' ? 19 : 15.5) : 9.3) * trickBonus;
   state.ball.ownerId = null;
   state.ball.lastTouch = player.team;
   state.ball.position = {
@@ -86,13 +93,65 @@ function kick(state: MatchState, player: Footballer, action: ActionId) {
     z: player.position.z + aim.z * 0.5,
   };
   state.ball.velocity = { x: aim.x * speed, z: aim.z * speed };
+  if (player.trickTimer > 0 && player.trickId === 'rabona') state.ball.velocity.z += aim.x * 1.8;
   state.ball.height = FIELD.ballRadius;
   state.ball.verticalVelocity = action === 'lob' ? 6.2 : action === 'special' ? 3 : 0;
   state.ball.specialShot = action === 'special';
   state.ball.trailTimer = action === 'special' ? 0.7 : shot ? 0.18 : 0;
+  if (action === 'special') state.skill[player.team] = spendSpecialShot(state.skill[player.team]);
   if (shot) state.teams[player.team].shots += 1;
   player.actionCooldown = shot ? 0.45 : 0.32;
   pushEvent(state, action === 'special' ? 'special' : 'kick', action === 'lob' ? 'PASE ALTO' : shot ? '¡REMATE!' : 'PASE', player.team, player.position, player.id, 0.45);
+}
+
+export function performTrick(state: MatchState, playerId: string, trickId: string): boolean {
+  const player = state.players.find((item) => item.id === playerId);
+  const trick = trickById(trickId);
+  if (state.phase !== 'playing' || !player || !trick || player.stun > 0 || player.trickCooldown > 0) return false;
+
+  player.trickId = trick.id;
+  player.trickTimer = 0.78;
+  player.trickCooldown = 1.15;
+  let gained = trick.style;
+  let eventText: string = trick.name;
+  if (trick.humiliates) {
+    const opponent = state.players
+      .filter((item) => item.team !== player.team && item.role === 'field')
+      .map((item) => ({ item, distance: Math.hypot(item.position.x - player.position.x, item.position.z - player.position.z) }))
+      .sort((a, b) => a.distance - b.distance)[0];
+    if (opponent && opponent.distance <= 1.55) {
+      opponent.item.stun = Math.max(opponent.item.stun, 0.58);
+      if (state.ball.ownerId === opponent.item.id) {
+        state.ball.ownerId = player.id;
+        state.ball.lastTouch = player.team;
+      }
+      gained += HUMILIATION_STYLE_BONUS;
+      eventText = `${trick.name} · +${gained} ESTILO`;
+    }
+  }
+  state.skill[player.team] = addStyle(state.skill[player.team], gained);
+  if (trick.id === 'sombrerito' && state.ball.ownerId === player.id) {
+    state.ball.ownerId = null;
+    state.ball.lastTouch = player.team;
+    state.ball.position = { x: player.position.x + player.facing.x * 0.72, z: player.position.z + player.facing.z * 0.72 };
+    state.ball.velocity = { x: player.facing.x * 2.7, z: player.facing.z * 2.7 };
+    state.ball.height = 0.78;
+    state.ball.verticalVelocity = 3;
+  } else if (trick.id === 'taco' && state.ball.ownerId === player.id) {
+    state.ball.ownerId = null;
+    state.ball.lastTouch = player.team;
+    state.ball.position = { x: player.position.x - player.facing.x * 0.68, z: player.position.z - player.facing.z * 0.68 };
+    state.ball.velocity = { x: -player.facing.x * 8.1, z: -player.facing.z * 8.1 };
+    state.ball.height = FIELD.ballRadius;
+    state.ball.verticalVelocity = 0.6;
+  } else if (trick.id === 'pecho' && !state.ball.ownerId && state.ball.height > 0.55 && Math.hypot(state.ball.position.x - player.position.x, state.ball.position.z - player.position.z) < 2.1) {
+    state.ball.ownerId = player.id;
+    state.ball.lastTouch = player.team;
+    state.ball.height = FIELD.ballRadius;
+    state.ball.verticalVelocity = 0;
+  }
+  pushEvent(state, 'trick', eventText, player.team, player.position, player.id, 0.95);
+  return true;
 }
 
 function nearestFieldPlayer(state: MatchState, team: TeamId, position: Vec2) {
@@ -148,6 +207,7 @@ function movePlayer(player: Footballer, control: PlayerControls, dt: number) {
   player.actionCooldown = Math.max(0, player.actionCooldown - dt);
   player.tackleCooldown = Math.max(0, player.tackleCooldown - dt);
   player.trickCooldown = Math.max(0, player.trickCooldown - dt);
+  player.trickTimer = Math.max(0, player.trickTimer - dt);
   player.celebration = Math.max(0, player.celebration - dt);
 }
 
@@ -255,6 +315,7 @@ export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 
       ? aiControls[state.players.filter((p) => p.team === 1).findIndex((p) => p.id === player.id)]
       : { move: { x: 0, z: 0 }, sprint: false, slide: false };
     movePlayer(player, controls, slice);
+    if (player.id === state.selectedPlayerId && controls.trickId) performTrick(state, player.id, controls.trickId);
     if (player.id === state.ball.ownerId && controls.action && player.actionCooldown <= 0) kick(state, player, controls.action);
   });
   if (!state.ball.ownerId) {
@@ -272,7 +333,7 @@ export function applyAction(state: MatchState, action: ActionId) {
   const player = state.players.find((p) => p.id === state.selectedPlayerId);
   if (!player || player.team !== 0) return;
   player.actionCooldown = Math.max(0, player.actionCooldown);
-  if (action === 'special' && state.skill[0] < 100) return;
+  if (action === 'special' && !canUseSpecialShot(state.skill[0])) return;
   if (state.ball.ownerId !== player.id) return;
   kick(state, player, action);
 }

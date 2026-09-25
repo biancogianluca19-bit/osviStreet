@@ -263,9 +263,14 @@ export class MatchRenderer {
         this.arena.add(view.root);
       }
       view.root.position.set(player.position.x, 0, player.position.z);
-      view.root.rotation.y = -Math.atan2(player.facing.z, player.facing.x);
+      const facing = -Math.atan2(player.facing.z, player.facing.x);
+      const trickProgress = player.trickTimer > 0 ? 1 - player.trickTimer / 0.78 : 0;
+      const flourish = player.trickTimer > 0 ? Math.sin(Math.PI * trickProgress) : 0;
+      const spin = player.trickTimer > 0 && player.trickId === 'rueda' ? trickProgress * Math.PI * 2 : 0;
+      view.root.rotation.y = facing + spin;
+      view.root.rotation.z = player.trickTimer > 0 ? (player.trickId === 'elastica' ? -0.48 : player.trickId === 'taco' ? 0.35 : 0) * flourish : 0;
       const run = Math.hypot(player.velocity.x, player.velocity.z) > 1;
-      view.root.position.y = player.celebration > 0 ? Math.abs(Math.sin((1.2 - player.celebration) * 14)) * 0.5 : run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0;
+      view.root.position.y = player.celebration > 0 ? Math.abs(Math.sin((1.2 - player.celebration) * 14)) * 0.5 : flourish * (player.trickId === 'sombrerito' ? 0.35 : 0.18) + (run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0);
       if (view.pulse) {
         view.pulse.visible = player.id === state.selectedPlayerId;
         view.pulse.rotation.z += dt * 0.7;

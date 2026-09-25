@@ -29,7 +29,7 @@
         <div class="timer-block"><span class="timer-label">JAULA ABIERTA</span><strong id="match-timer">3:00</strong></div>
         <div class="team-score team-score-away"><strong id="score-away">0</strong><span class="score-team" id="team-away">BARRIO NORTE</span></div>
         <button class="pause-button" id="pause-match" aria-label="Pausar partido">Ⅱ</button>
-        <div class="skill-readout hidden" id="skill-readout"><span>ESTILO</span><div class="skill-meter"><i id="skill-meter-fill"></i></div><b id="skill-meter-label">0%</b></div>
+        <div class="skill-readout" id="skill-readout"><span>ESTILO</span><div class="skill-meter"><i id="skill-meter-fill"></i></div><b id="skill-meter-label">0%</b></div>
       </section>
       <div class="event-callout" id="event-callout" aria-live="polite"></div>
       <section class="touch-ui hidden" id="touch-ui" aria-label="Controles del partido">
@@ -38,11 +38,16 @@
           <button class="touch-action pass-action" data-action="pass" aria-label="Pase"><span>↗</span><b>PASE</b></button>
           <button class="touch-action lob-action" data-action="lob" aria-label="Pase por arriba"><span>⌒</span><b>ALTO</b></button>
           <button class="touch-action slide-action" data-action="slide" aria-label="Barrida"><span>⌁</span><b>BARRIDA</b></button>
+          <button class="touch-action trick-action" id="trick-button" aria-label="Truco: deslizar para elegir"><span>✦</span><b>TRUCO</b></button>
           <button class="touch-action sprint-action" data-hold="sprint" aria-label="Mantener sprint"><span>➤</span><b>SPRINT</b></button>
           <button class="touch-action shoot-action" data-action="shoot" aria-label="Remate"><span>⚽</span><b>REMATE</b></button>
         </div>
       </section>
-      <div class="desktop-hints hidden" id="desktop-hints"><span><kbd>W A S D</kbd> MOVER</span><span><kbd>J</kbd> PASE</span><span><kbd>K</kbd> PASE ALTO</span><span><kbd>ESPACIO</kbd> REMATE</span><span><kbd>SHIFT</kbd> SPRINT</span></div>
+      <div class="trick-selector hidden" id="trick-selector" role="status" aria-live="polite"><strong id="trick-preview">DESLIZÁ PARA ELEGIR</strong><div class="trick-options">
+        <span data-trick="canio">→ CAÑO</span><span data-trick="rabona">↘ RABONA</span><span data-trick="bicicleta">↓ BICI</span><span data-trick="sombrerito">↙ SOMBRERO</span>
+        <span data-trick="elastica">← ELÁSTICA</span><span data-trick="taco">↖ TACO</span><span data-trick="rueda">↑ RUEDA</span><span data-trick="pecho">↗ PECHO</span>
+      </div></div>
+      <div class="desktop-hints hidden" id="desktop-hints"><span><kbd>W A S D</kbd> MOVER</span><span><kbd>J</kbd> PASE</span><span><kbd>K</kbd> PASE ALTO</span><span><kbd>ESPACIO</kbd> REMATE</span><span><kbd>T</kbd> TRUCO</span><span><kbd>SHIFT</kbd> SPRINT</span></div>
       <section class="pause-panel hidden" id="pause-panel" aria-label="Partido pausado"><span class="eyebrow">RESPIRÁ UN SEGUNDO</span><h2>PARTIDO PAUSADO</h2><button class="primary-button" id="resume-match">VOLVER A JUGAR</button><button class="text-button" id="quit-match">SALIR AL MENÚ</button></section>
       <section class="result-panel hidden" id="result-panel" aria-live="polite"><span class="eyebrow">PARTIDO TERMINADO</span><h2 id="result-title">¡GANASTE LA JAULA!</h2><p id="result-score">0 — 0</p><button class="primary-button" id="replay-match">REVANCHA</button><button class="text-button" id="result-menu">VOLVER AL MENÚ</button></section>
       <aside class="rotate-screen"><div class="rotate-icon">▱</div><strong>GIRÁ EL CELULAR</strong><span>osviStreet se juega en horizontal.</span></aside>
