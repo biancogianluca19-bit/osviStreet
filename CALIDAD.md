@@ -114,6 +114,7 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 2 · 2026-09-26 | 7 | 7 | 6 | 5 | 4 | 29/50 |
 | Ronda 3 · 2026-09-26 | 8 | 7 | 6 | 5 | 8 | 34/50 |
 | Ronda 4 · 2026-09-26 | 8 | 8 | 7 | 5 | 8 | 36/50 |
+| Ronda 5 · 2026-09-26 | 9 | 8 | 7 | 5 | 8 | 37/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -131,3 +132,20 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 ### Capturas comparables de ronda 4
 
 Antes: [partido a 915 × 412](outputs/captures/round-3-after/match-915x412.png). Después: [menú a 1366 × 768](outputs/captures/round-4-after/menu-1366x768.png), [partido a 1366 × 768](outputs/captures/round-4-after/match-1366x768.png), [menú a 915 × 412](outputs/captures/round-4-after/menu-915x412.png) y [partido a 915 × 412](outputs/captures/round-4-after/match-915x412.png).
+
+
+## Ronda 5 · carga inicial ligera
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | El menú aparece sin esperar el módulo 3D. En una prueba con 4G simulado, CPU 4× y caché fría, el evento de carga terminó en 1,06 s en escritorio y 1,42 s en 915 × 412. |
+| Sensación al jugar | 8/10 | El jugador ve una cancha de espera y puede pulsar Partido mientras carga el renderer; el botón muestra el estado de carga. La cancha 3D quedó lista 5,01 s después del toque en escritorio y 3,47 s en móvil bajo esa simulación. |
+| Gráficos | 7/10 | La portada usa una cancha CSS liviana hasta que se solicita un partido; la vista de juego sigue renderizándose en Three.js. |
+| Sonido | 5/10 | Sin cambios en la mezcla, música ni muestras. |
+| Progresión | 8/10 | Tutorial, carrera, premios y modos sin cambios. |
+
+**Puntuación de ronda 5:** 37/50. La entrada JS bajó de 588,41 kB a 64,43 kB sin comprimir (de 157,27 a 21,85 kB gzip); Three.js quedó en un chunk separado de 524,24 kB (135,51 kB gzip). El test usó Chrome headless con aceleración SwiftShader, caché desactivada, 120 ms de latencia, 200 kB/s y CPU 4×. Sirve para comparar carga y flujo; no reemplaza un teléfono real ni una red móvil física.
+
+### Capturas comparables de ronda 5
+
+Antes: [menú móvil](outputs/captures/round-4-after/menu-915x412.png) y [partido móvil](outputs/captures/round-4-after/match-915x412.png). Después: [menú 1366 × 768](outputs/captures/round-5-after/menu-1366x768.png), [partido 1366 × 768](outputs/captures/round-5-after/match-1366x768.png), [menú 915 × 412](outputs/captures/round-5-after/menu-915x412.png) y [partido 915 × 412](outputs/captures/round-5-after/match-915x412.png).

@@ -51,7 +51,17 @@
 - **Cambios:** agregué golpes de cámara de 200 ms con distinta intensidad para remate, truco, rebote, barrida, atajada y gol. Los mismos eventos piden una vibración corta si el navegador expone `navigator.vibrate`; los equipos sin esa API siguen usando cámara y audio.
 - **Capturas:** guardé menú y partido a 1366 × 768 y 915 × 412 en `outputs/captures/round-4-after/`. Revisé las dos capturas de partido; el tutorial y los controles quedan dentro del cuadro en horizontal. En la captura fija no se aprecia el golpe de cámara porque requiere un evento.
 - **Build:** `pnpm build` pasó; el bundle principal quedó en 588,41 kB (157,27 kB gzip) y Vite mantiene su aviso por superar 500 kB.
-- **Tests:** 37 pruebas sin la simulación de 200 partidos; el workflow de la ronda 3 pasó la suite completa. El workflow de esta ronda se comprobará después del push.
+- **Tests:** 37 pruebas sin la simulación de 200 partidos; el workflow 36241297480 pasó la suite completa, APK, Pages y release debug-8-1.
 - **Balance:** la medición reproducible anterior registró 5,525 goles y 39,26 remates por partido; cero encuentros sin remates. Esta ronda no cambia reglas ni parámetros de simulación.
 - **Puntuación:** 36/50 — primeros 30 s 8, sensación 8, gráficos 7, sonido 5, progresión 8.
 - **Siguiente:** confirmar tests y publicación de la ronda 4; revisar la carga del bundle, música durante partidos largos y respuesta en un teléfono Android real.
+
+## Ronda 5 · carga inicial ligera
+
+- **Hora:** 2026-09-26, 09:24–12:16 ART.
+- **Cambios:** saqué la importación estática del renderer. El menú conserva una cancha 2D en CSS; al iniciar una partida se importa Three.js, se muestra PREPARANDO LA CANCHA y se inicia el bucle de render cuando el WebGL está listo. Al crear el renderer reinicio el contador de FPS para no interpretar el tiempo pasado en el menú como una caída de rendimiento.
+- **Capturas:** guardé y revisé menú y partido a 1366 × 768 y 915 × 412 en outputs/captures/round-5-after/. La cancha 2D no recorta el menú; el partido carga los jugadores 3D y los controles quedan dentro de la pantalla móvil.
+- **Medición de carga:** Chrome headless, caché fría, red 4G simulada (120 ms, 200 kB/s) y CPU 4×. El evento de carga del menú tomó 1,06 s en escritorio y 1,42 s en móvil. Desde tocar Partido hasta tener cancha 3D: 5,01 s en escritorio y 3,47 s en móvil. Chunk inicial 64,43 kB (21,85 kB gzip); renderer diferido 524,24 kB (135,51 kB gzip).
+- **Tests y build:** 37 tests en cinco archivos pasaron sin aiBalance.test.ts; pnpm build pasó. El bundle principal dejó de cruzar el umbral de 500 kB, pero el chunk 3D todavía activa ese aviso. La CI completa de esta ronda se comprobará al publicar.
+- **Puntuación:** 37/50 — primeros 30 s 9, sensación 8, gráficos 7, sonido 5, progresión 8.
+- **Siguiente:** reducir el tiempo del chunk 3D para iniciar el partido en menos de cinco segundos en escritorio lento; probar un Android real y medir el rendimiento; retomar la calidad de audio y las animaciones.

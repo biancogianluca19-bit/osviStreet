@@ -13,7 +13,7 @@ import { createMatch, stepMatch } from './game/rules';
 import { type ActionId, type Difficulty, type MatchState, type PlayerControls, type Vec2 } from './game/types';
 import { DEFAULT_TRICK, TRICK_SWIPE_THRESHOLD, TRICKS, trickFromSwipe, type TrickId } from './game/tricks';
 import { canUseSpecialShot } from './game/styleMeter';
-import { MatchRenderer } from './game/renderer';
+import type { MatchRenderer } from './game/renderer';
 import { StreetAudio } from './game/audio';
 import { BOOT_STYLES, createQuickMatchTeams, createTournament, currentTournamentMatch, getStreetTeam, recordTournamentResult, STREET_TEAMS, teamOptions, tournamentRoundName, UNIFORM_STYLES, type TournamentState } from './game/modes';
 import { achievementsFor, careerProgress, challengeForDay, difficultyAfterWin, parseProgress, purchaseReward, recordCompletedMatch, refreshDailyChallenge, REWARDS, selectReward, type PlayerProgress } from './game/progress';
@@ -25,6 +25,7 @@ const el = <T extends HTMLElement>(id: string) => {
 };
 
 const stadium = el<HTMLDivElement>('stadium');
+const appRoot = el<HTMLElement>('app');
 const intro = el<HTMLElement>('intro-panel');
 const hud = el<HTMLElement>('match-hud');
 const touchUi = el<HTMLElement>('touch-ui');
@@ -63,13 +64,35 @@ const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxT
 let progress: PlayerProgress = parseProgress(localStorage.getItem('osvistreet-progress'));
 
 let game: MatchState = createMatch({ courtId: progress.court, bootColor: BOOT_STYLES[progress.boots].color });
-let renderer: MatchRenderer;
-try {
-  renderer = new MatchRenderer(stadium, progress.court);
-} catch (error) {
-  console.error(error);
-  stadium.innerHTML = '<div class="webgl-error"><strong>Esta cancha necesita WebGL.</strong><span>Actualizá Chrome o activá la aceleración gráfica del celular.</span></div>';
-  throw error;
+let renderer: MatchRenderer | undefined;
+let rendererPromise: Promise<MatchRenderer> | undefined;
+let matchStartPending = false;
+
+function ensureRenderer(): Promise<MatchRenderer> {
+  if (renderer) return Promise.resolve(renderer);
+  if (!rendererPromise) {
+    rendererPromise = import('./game/renderer').then(({ MatchRenderer: Renderer }) => {
+      const instance = new Renderer(stadium, progress.court);
+      renderer = instance;
+      stadium.removeAttribute('aria-busy');
+      appRoot.classList.remove('renderer-loading');
+      qualityFrames = 0;
+      qualityWindowStart = performance.now();
+      lastTime = qualityWindowStart;
+      requestAnimationFrame(frame);
+      return instance;
+    }).catch((error: unknown) => {
+      rendererPromise = undefined;
+      stadium.removeAttribute('aria-busy');
+      appRoot.classList.remove('renderer-loading');
+      console.error(error);
+      stadium.innerHTML = '<div class="webgl-error"><strong>Esta cancha necesita WebGL.</strong><span>Actualizá Chrome o activá la aceleración gráfica del celular.</span></div>';
+      throw error;
+    });
+    stadium.setAttribute('aria-busy', 'true');
+    appRoot.classList.add('renderer-loading');
+  }
+  return rendererPromise;
 }
 let running = false;
 type GameMode = 'quick' | 'tournament' | 'local';
@@ -306,7 +329,17 @@ function clearControlState() {
   trickSelector.classList.add('hidden');
 }
 
-function beginMatch(mode: GameMode = currentMode) {
+async function beginMatch(mode: GameMode = currentMode) {
+  if (matchStartPending) return;
+  matchStartPending = true;
+  let matchRenderer: MatchRenderer;
+  try {
+    matchRenderer = await ensureRenderer();
+  } catch {
+    matchStartPending = false;
+    return;
+  }
+  matchStartPending = false;
   clearControlState();
   currentMode = mode;
   audio.setScene('match');
@@ -325,8 +358,8 @@ function beginMatch(mode: GameMode = currentMode) {
     awayTeam = getStreetTeam(fixture.awayId);
   }
   const uniformColors = UNIFORM_STYLES[progress.uniform].colors;
-  renderer.setCourt(progress.court);
-  renderer.resetActors();
+  matchRenderer.setCourt(progress.court);
+  matchRenderer.resetActors();
   game = createMatch({
     difficulty: Number(difficultySelect.value) as Difficulty,
     localPlayers: mode === 'local' ? 2 : 1,
@@ -366,7 +399,7 @@ function beginMatch(mode: GameMode = currentMode) {
   p2Actions.classList.toggle('hidden', mode !== 'local');
   p2Joystick.classList.toggle('hidden', mode !== 'local');
   p2SkillReadout.classList.toggle('hidden', mode !== 'local');
-  el<HTMLElement>('app').classList.toggle('local-duel', mode === 'local');
+  appRoot.classList.toggle('local-duel', mode === 'local');
   document.documentElement.classList.add('match-active');
   if (Capacitor.isNativePlatform()) void ScreenOrientation.lock({ orientation: 'landscape' }).catch(() => undefined);
   updateHud();
@@ -412,7 +445,7 @@ function exitMatch() {
   touchUi.classList.add('hidden');
   desktopHints.classList.add('hidden');
   document.documentElement.classList.remove('match-active');
-  el<HTMLElement>('app').classList.remove('local-duel');
+  appRoot.classList.remove('local-duel');
   updateMenuProfile();
 }
 
@@ -538,6 +571,7 @@ function selectedPlayerForTeam(team: 0 | 1) {
 }
 
 function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1: string | undefined }) {
+  if (!renderer) return;
   eventCalloutTimer = Math.max(0, eventCalloutTimer - dt);
   const unseen = game.events.filter((event) => event.id > lastShownEventId);
   lastShownEventId = game.eventId;
@@ -666,17 +700,19 @@ function frame(now: number) {
     showEvents(dt, inputPlayers);
     if (game.phase === 'finished') finishMatch();
   }
-  renderer.render(game, dt);
-  qualityFrames += 1;
-  if (now - qualityWindowStart >= 1000) {
-    const fps = qualityFrames * 1000 / (now - qualityWindowStart);
-    const nextScale = fps < 52 ? Math.max(0.8, renderScale - 0.15) : fps > 58 ? Math.min(1.5, renderScale + 0.1) : renderScale;
-    if (nextScale !== renderScale) {
-      renderScale = nextScale;
-      renderer.setPixelScale(renderScale);
+  if (renderer) {
+    renderer.render(game, dt);
+    qualityFrames += 1;
+    if (now - qualityWindowStart >= 1000) {
+      const fps = qualityFrames * 1000 / (now - qualityWindowStart);
+      const nextScale = fps < 52 ? Math.max(0.8, renderScale - 0.15) : fps > 58 ? Math.min(1.5, renderScale + 0.1) : renderScale;
+      if (nextScale !== renderScale) {
+        renderScale = nextScale;
+        renderer.setPixelScale(renderScale);
+      }
+      qualityFrames = 0;
+      qualityWindowStart = now;
     }
-    qualityFrames = 0;
-    qualityWindowStart = now;
   }
   requestAnimationFrame(frame);
 }
@@ -770,7 +806,7 @@ function onLockerChange(event: Event) {
   progress = selectReward(progress, courtSelect.selectedOptions[0]?.dataset.unlockId ?? courtSelect.value);
   persistProgress();
   updateMenuProfile();
-  renderer.setCourt(progress.court);
+  renderer?.setCourt(progress.court);
 }
 uniformSelect.addEventListener('change', onLockerChange);
 bootsSelect.addEventListener('change', onLockerChange);
@@ -1007,4 +1043,3 @@ window.addEventListener('keyup', (event) => {
 window.addEventListener('blur', clearControlState);
 
 updateMenuProfile();
-requestAnimationFrame(frame);

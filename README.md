@@ -71,6 +71,7 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - Los jugadores tienen brazos y piernas articulados con ciclo de carrera; los arqueros inclinan el cuerpo al desplazarse. Los modelos procedurales usan más detalles de uniforme y cara.
 - Cuatro canchas caricaturescas: terraza al atardecer, jaula de grafitis, playa y galpón neón.
 - Estelas de pelota, partículas, cámara lenta breve, nombres de trucos, música y efectos de audio sintetizados.
+- El menú carga una cancha CSS liviana y deja Three.js para el momento de entrar a jugar. En la carga del renderer aparece el aviso PREPARANDO LA CANCHA; la escala del render se adapta según FPS.
 - Remates, trucos, rebotes, barridas, atajadas y goles activan un pulso de cámara de 200 ms; en navegadores móviles con `navigator.vibrate`, el mismo evento suma una vibración breve.
 - La escala de render baja o sube según los FPS observados para adaptarse al dispositivo.
 - `CALIDAD.md` registra la línea de base, los juegos de referencia y la puntuación por ronda. `PROGRESO.md` y `outputs/captures/` guardan los cambios y las capturas comparables en 1366 × 768 y 915 × 412.
@@ -130,4 +131,4 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 - No se pudo instalar la APK en un teléfono o emulador desde este entorno.
 - No se midieron 60 FPS en un teléfono Android de gama media ni se probaron allí la orientación, el audio y los controles táctiles físicos.
-- Vite informa que el bundle principal supera 500 kB sin comprimir. La salida actual ronda 152 kB comprimida; queda medir su efecto en redes móviles y equipos reales.
+- La entrada del menú pesa 64,43 kB (21,85 kB gzip) y el renderer diferido 524,24 kB (135,51 kB gzip); Vite aún advierte por ese chunk 3D. En Chrome headless con red 4G simulada y CPU 4×, el menú cargó en 1,06 s en escritorio y 1,42 s en móvil; iniciar el juego tardó 5,01 s y 3,47 s respectivamente. No son mediciones de Android físico.
