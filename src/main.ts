@@ -13,6 +13,7 @@ import { createMatch, stepMatch } from './game/rules';
 import { type ActionId, type Difficulty, type MatchState, type PlayerControls, type Vec2 } from './game/types';
 import { DEFAULT_TRICK, TRICK_SWIPE_THRESHOLD, TRICKS, trickFromSwipe, type TrickId } from './game/tricks';
 import { canUseSpecialShot } from './game/styleMeter';
+import { ACTION_BUFFER_MS, actionWaitNotice } from './game/timing';
 import type { MatchRenderer } from './game/renderer';
 import { StreetAudio } from './game/audio';
 import { BOOT_STYLES, createQuickMatchTeams, createTournament, currentTournamentMatch, getStreetTeam, recordTournamentResult, STREET_TEAMS, teamOptions, tournamentRoundName, UNIFORM_STYLES, type TournamentState } from './game/modes';
@@ -256,7 +257,6 @@ const keys = new Set<string>();
 let lastShownEventId = 0;
 let eventCalloutTimer = 0;
 let playerTricksInMatch = 0;
-const ACTION_BUFFER_MS = 1_400;
 
 function showMatchControls() {
   touchUi.classList.remove('hidden');
@@ -747,7 +747,8 @@ function queueAction(action: ActionId) {
   } else {
     queuedAction = action === 'shoot' && canUseSpecialShot(game.skill[0]) ? 'special' : action;
     queuedActionUntil = performance.now() + ACTION_BUFFER_MS;
-    if (player?.id !== game.ball.ownerId) showControlNotice('RECUPERÁ LA PELOTA');
+    const waitNotice = actionWaitNotice(game.phase, player?.id === game.ball.ownerId);
+    if (waitNotice) showControlNotice(waitNotice);
   }
 }
 
@@ -760,7 +761,8 @@ function queueSecondAction(action: ActionId) {
   } else {
     p2QueuedAction = action;
     p2QueuedActionUntil = performance.now() + ACTION_BUFFER_MS;
-    if (player?.id !== game.ball.ownerId) showControlNotice('RECUPERÁ LA PELOTA');
+    const waitNotice = actionWaitNotice(game.phase, player?.id === game.ball.ownerId);
+    if (waitNotice) showControlNotice(waitNotice);
   }
 }
 

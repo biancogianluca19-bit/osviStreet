@@ -86,3 +86,15 @@
 - **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8.
 - **Pendiente:** verificar el toque físico, el remate y la atajada en movimiento; probar audio y rendimiento en Android. No pude verificar 60 FPS en un teléfono.
 - **Siguiente:** mejorar la lectura del remate y capturar una atajada; medir FPS/carga en Android de gama media; reducir el chunk 3D; revisar las cuatro canchas y las pantallas de menú en un teléfono; comparar y corregir la mezcla musical y los efectos con escucha real.
+
+## Ronda 8 · controles táctiles y saques
+
+- **Hora:** 2026-09-26, 15:05–15:20 ART.
+- **Hallazgo:** después de un gol el saque dura 1,45 s, pero el buffer de entrada era 1,4 s. Una acción tocada al comienzo podía vencer justo antes de reanudar el partido. El aviso también decía que faltaba recuperar la pelota aunque el saque siguiera bloqueado.
+- **Cambios:** elevé el buffer a 1,8 s y reuní el tiempo del saque y el buffer en `src/game/timing.ts`; ahora el aviso diferencia **ESPERA EL SAQUE** de **RECUPERÁ LA PELOTA**. Pase, pase alto, barrida, truco, sprint y remate aumentaron a 86 × 86 px; remate a 91 × 140 px y pausa a 68 × 46 px en 915 × 412. Amplié iconos y etiquetas.
+- **Prueba en navegador:** usé Chrome headless con eventos de toque emulados. Un toque de Pase durante el saque produjo **PASE**; Barrida produjo **BARRIDA**; Pausa abrió el panel y **SALIR AL MENÚ** volvió a la portada. Cero errores JavaScript. El reinicio postgol se verificó con una prueba unitaria que contrasta sus 1,45 s con el buffer de 1,8 s; el toque de navegador se hizo durante el saque inicial de 0,65 s.
+- **Capturas:** comparé `outputs/captures/round-7-after/match-915x412.png` con las capturas nuevas. Los botones ahora resaltan y los rótulos se leen mejor; no recortan el límite inferior. Guardé menú y partido a 1366 × 768 y 915 × 412, además de Pase, Barrida y pausa.
+- **Tests y build:** `pnpm test --reporter=verbose` pasó 41 tests en siete archivos. Los 200 partidos dieron 5,525 goles, 39,26 remates y cero partidos sin remates. `pnpm build` pasó; Vite sigue avisando que el chunk Three.js supera 500 kB.
+- **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. La nota no sube: la respuesta táctil mejoró, pero falta comprobarla físicamente y revisar rendimiento en Android.
+- **Pendiente:** probar la APK en teléfono Android; medir 60 FPS y controles físicos; probar los ocho gestos de truco sobre un panel táctil real; escuchar la mezcla con auriculares; continuar afinando animación de remate y atajada.
+- **Siguiente:** instalar y probar en un Android de gama media; medir los FPS en las cuatro canchas; reducir el chunk 3D y mantener el partido bajo cinco segundos de carga; hacer más legible el remate y verificar atajadas en movimiento; escuchar y reemplazar la síntesis por audio CC0 donde mejore el resultado.

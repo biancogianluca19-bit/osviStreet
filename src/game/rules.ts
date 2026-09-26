@@ -3,6 +3,7 @@ import { stepBall } from './physics';
 import { trickById } from './tricks';
 import { addStyle, canUseSpecialShot, HUMILIATION_STYLE_BONUS, spendSpecialShot } from './styleMeter';
 import { createTeamAiControls } from './ai';
+import { GOAL_RESTART_DELAY_SECONDS } from './timing';
 
 const DEFAULT_TEAMS: [string, string] = ['Los Candela', 'Barrio Norte'];
 const DEFAULT_COLORS: [[string, string], [string, string]] = [['#ff5b35', '#ffe76d'], ['#2bd9c0', '#332b62']];
@@ -276,7 +277,7 @@ function scoreGoal(state: MatchState, team: TeamId) {
   state.teams[team].score += 1;
   state.kickoffTeam = team === 0 ? 1 : 0;
   state.phase = state.teams[team].score >= state.targetScore ? 'finished' : 'goal';
-  state.kickoffTimer = 1.45;
+  state.kickoffTimer = GOAL_RESTART_DELAY_SECONDS;
   state.ball.ownerId = null;
   state.ball.velocity = { x: 0, z: 0 };
   state.ball.position = { x: 0, z: 0 };

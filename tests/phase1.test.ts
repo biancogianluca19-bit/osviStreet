@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { collideBallWithWalls } from '../src/game/physics';
 import { createMatch, stepMatch } from '../src/game/rules';
+import { GOAL_RESTART_DELAY_SECONDS } from '../src/game/timing';
 import { FIELD, type Ball } from '../src/game/types';
 
 const ball = (): Ball => ({
@@ -86,6 +87,20 @@ describe('Fase 1: partido callejero', () => {
     stepMatch(state, { move: { x: 0, z: 0 }, sprint: false, slide: false });
     expect(state.teams[0].score).toBe(5);
     expect(state.phase).toBe('finished');
+  });
+
+  it('mantiene el saque bloqueado durante 1,45 segundos después de un gol', () => {
+    const state = createMatch();
+    state.phase = 'playing';
+    state.ball.ownerId = null;
+    state.ball.position.x = FIELD.halfLength - 0.2;
+    state.ball.position.z = 0;
+    state.ball.velocity.x = 10;
+
+    stepMatch(state, { move: { x: 0, z: 0 }, sprint: false, slide: false });
+
+    expect(state.phase).toBe('goal');
+    expect(state.kickoffTimer).toBe(GOAL_RESTART_DELAY_SECONDS);
   });
 
   it('termina el partido cuando se agotan los tres minutos', () => {

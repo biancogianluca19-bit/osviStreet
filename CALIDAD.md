@@ -117,6 +117,7 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 5 · 2026-09-26 | 9 | 8 | 7 | 5 | 8 | 37/50 |
 | Ronda 6 · 2026-09-26 | 9 | 8 | 7 | 6 | 8 | 38/50 |
 | Ronda 7 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 8 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -184,3 +185,19 @@ Antes: [menú móvil](outputs/captures/round-5-after/menu-915x412.png) y [partid
 ### Capturas comparables de ronda 7
 
 Antes: [partido 1366 × 768](outputs/captures/round-6-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-6-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-7-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-7-after/match-915x412.png), [remate en 915 × 412](outputs/captures/round-7-after/action-kick-915x412.png) y [barrida en 915 × 412](outputs/captures/round-7-after/action-slide-915x412.png). Menú de escritorio y móvil en `outputs/captures/round-7-after/`.
+
+## Ronda 8 · controles táctiles y saques
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Inicio rápido y tutorial sin cambios. |
+| Sensación al jugar | 9/10 | El pase queda en espera hasta 1,8 s y puede sobrevivir el saque postgol de 1,45 s. El aviso distingue el saque pendiente de estar sin pelota. Remate, acciones y pausa tienen blancos más grandes. |
+| Gráficos | 8/10 | Los botones tienen iconos y etiquetas mayores, manteniendo el campo dentro de pantalla. |
+| Sonido | 6/10 | Sin cambios en la mezcla ni efectos sintetizados. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 8:** 40/50. Mantuve las notas: la interacción mejoró, pero sigue pendiente la prueba física y la comparación en movimiento para justificar una nota más alta. En Chrome con eventos táctiles emulados en 915 × 412, el pase tocado durante el saque produjo el evento `PASE`; la barrida produjo `BARRIDA`; Pausa abrió el panel y **SALIR AL MENÚ** devolvió a la portada. Cero errores JavaScript. Medidas: cinco botones de acción de 86 × 86 px, remate de 91 × 140 px y pausa de 68 × 46 px. En 1366 × 768 el menú, partido y controles entran. `pnpm test` pasó 41/41 en siete archivos, con 5,525 goles de promedio, 39,26 remates y cero partidos sin remates; `pnpm build` pasó. La prueba confirma que el reinicio del partido y el buffer comparten el tiempo definido; el navegador tocó durante el saque inicial de 0,65 s. El chunk 3D aún supera la advertencia de Vite de 500 kB.
+
+### Capturas comparables de ronda 8
+
+Antes: [partido móvil de ronda 7](outputs/captures/round-7-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-8-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-8-after/match-915x412.png), [pase en saque](outputs/captures/round-8-after/action-pass-915x412.png), [barrida táctil](outputs/captures/round-8-after/action-slide-915x412.png) y [panel de pausa](outputs/captures/round-8-after/pause-915x412.png). Los menús de ambos tamaños también están en `outputs/captures/round-8-after/`.

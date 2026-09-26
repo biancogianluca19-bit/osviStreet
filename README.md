@@ -41,7 +41,7 @@ En Windows, usá `gradlew.bat assembleDebug` dentro de `android`.
 
 ## Controles
 
-En celular, girá el dispositivo a horizontal. El joystick izquierdo mueve al jugador; los botones de pase, pase alto, barrida, truco y sprint miden 78 × 78 px en 915 × 412. El remate mide 87 × 124 px. En navegador también podés usar el joystick y los botones con mouse, o mover al jugador con el teclado. Tocá **Truco** para hacer una bicicleta o deslizá desde ese botón para elegir otra jugada:
+En celular, girá el dispositivo a horizontal. El joystick izquierdo mueve al jugador; los botones de pase, pase alto, barrida, truco y sprint miden 86 × 86 px en 915 × 412. El remate mide 91 × 140 px y Pausa 68 × 46 px. En navegador también podés usar el joystick y los botones con mouse, o mover al jugador con el teclado. Tocá **Truco** para hacer una bicicleta o deslizá desde ese botón para elegir otra jugada:
 
 | Deslizamiento | Truco |
 | --- | --- |
@@ -88,6 +88,7 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - `src/game/progress.ts`: monedas, XP, niveles, tienda, desafío diario, récords, logros y estado del vestuario.
 - `src/game/tricks.ts`, `src/game/styleMeter.ts`: ocho trucos y barra de estilo.
 - `src/game/renderer.ts`: cancha y jugadores 3D, efectos visuales y ajuste dinámico de resolución.
+- `src/game/timing.ts`: duración del saque después de un gol, buffer de entradas y avisos táctiles.
 - `src/game/audio.ts`: música y sonidos sintetizados con Web Audio.
 - `src/main.ts`, `src/style.css`, `index.html`: interfaz, entradas táctiles/teclado y presentación.
 - `android/`: proyecto nativo generado por Capacitor, bloqueo horizontal y plugin de orientación.
@@ -109,6 +110,7 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 ### Cambios de revisión
 
+- Ronda 8: corregí el buffer que vencía 50 ms antes de terminar el saque postgol; ahora dura 1,8 s y distingue el aviso **ESPERA EL SAQUE** de **RECUPERÁ LA PELOTA**. También amplié los controles táctiles y Pausa. Chrome confirmó pase, barrida, pausa y salida al menú con eventos táctiles emulados; 41 tests pasaron.
 - El saque alterna después de cada gol y el arquero suelta la pelota al despejar.
 - La predicción de los arqueros incluye la desaceleración del balón; las atajadas tienen un breve enfriamiento.
 - La precisión de tiro y el alcance del arquero se calibraron con 200 partidos reproducibles.
