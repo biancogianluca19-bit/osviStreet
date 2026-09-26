@@ -268,6 +268,20 @@ kbd { padding: 4px 6px; border: 1px solid rgba(255,255,255,.22); border-radius: 
   .tutorial-panel { top: 78px; left: calc(50% - 45px); width: min(400px, calc(100vw - 300px)); }
   .touch-action { background-color: rgba(28, 27, 42, .76); }
   .shoot-action { background-color: rgba(255, 218, 79, .88); }
+  #app.local-duel .touch-ui { right: 8px; left: 8px; gap: 4px; }
+  #app.local-duel .joy-base { width: 96px; height: 96px; }
+  #app.local-duel .action-cluster { grid-template-columns: repeat(3, clamp(76px, 21vmin, 86px)); grid-template-rows: repeat(3, clamp(76px, 21vmin, 86px)); gap: 4px; }
+  #app.local-duel .shoot-action { width: clamp(76px, 21vmin, 86px); height: clamp(250px, 65vmin, 270px); }
+  #app.local-duel .duo-actions { grid-template-columns: repeat(3, clamp(76px, 21vmin, 86px)); grid-template-rows: repeat(2, clamp(76px, 21vmin, 86px)); gap: 4px; }
+  #app.local-duel .duo-actions [data-p2-action="pass"] { grid-column: 1; grid-row: 1; }
+  #app.local-duel .duo-actions [data-p2-action="lob"] { grid-column: 2; grid-row: 1; }
+  #app.local-duel .duo-actions [data-p2-action="shoot"] { grid-column: 3; grid-row: 1; }
+  #app.local-duel .duo-actions [data-p2-action="slide"] { grid-column: 1; grid-row: 2; }
+  #app.local-duel .duo-actions #trick-button-p2 { grid-column: 2; grid-row: 2; }
+  #app.local-duel .duo-actions [data-p2-hold="sprint"] { grid-column: 3; grid-row: 2; }
+  #app.local-duel .touch-action { background-color: rgba(28, 27, 42, .58); }
+  #app.local-duel .shoot-action { background-color: rgba(255, 218, 79, .82); }
+  #app.local-duel .duo-actions .p2-shoot-action { background-color: rgba(255, 218, 79, .82); }
 }
 
 @media (orientation: portrait) and (max-width: 780px) {

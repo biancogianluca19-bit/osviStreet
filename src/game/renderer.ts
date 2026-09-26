@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { crowdPose } from './crowd';
 import { FIELD, type CourtId, type Footballer, type MatchState, type TeamId } from './types';
 
 type ActorAnimation = 'kick' | 'slide' | 'save' | 'hit';
@@ -16,6 +17,8 @@ type ActorView = {
   animationDirection: number;
   animationPower: number;
 };
+
+type CrowdFigure = { x: number; z: number; phase: number };
 
 const colorMaterial = (color: string) => new THREE.MeshToonMaterial({ color });
 
@@ -76,6 +79,12 @@ export class MatchRenderer {
   private particleLives!: Float32Array;
   private particleCursor = 0;
   private requestedPixelScale = 1.5;
+  private crowdFigures: CrowdFigure[] = [];
+  private crowdBodies: THREE.InstancedMesh | null = null;
+  private crowdHeads: THREE.InstancedMesh | null = null;
+  private crowdArms: THREE.InstancedMesh | null = null;
+  private crowdEnergy = 0;
+  private readonly crowdTransform = new THREE.Object3D();
 
   constructor(private readonly host: HTMLElement, initialCourt: CourtId = 'court-rooftop') {
     this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
@@ -257,16 +266,69 @@ export class MatchRenderer {
 
   private buildCrowdProps(palette: CourtPalette) {
     const colorSet = palette.crowd;
-    for (let i = 0; i < 34; i++) {
+    const figureCount = 34;
+    this.crowdFigures = [];
+    this.crowdEnergy = 0;
+    this.crowdBodies = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.12, 0.15, 0.62, 7),
+      new THREE.MeshToonMaterial({ color: '#ffffff' }),
+      figureCount,
+    );
+    this.crowdHeads = new THREE.InstancedMesh(
+      new THREE.SphereGeometry(0.2, 9, 7),
+      new THREE.MeshToonMaterial({ color: '#ffffff' }),
+      figureCount,
+    );
+    this.crowdArms = new THREE.InstancedMesh(
+      new THREE.CapsuleGeometry(0.045, 0.24, 2, 6),
+      new THREE.MeshToonMaterial({ color: '#ffffff' }),
+      figureCount * 2,
+    );
+    for (const instances of [this.crowdBodies, this.crowdHeads, this.crowdArms]) {
+      instances.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      instances.frustumCulled = false;
+      this.arena.add(instances);
+    }
+    for (let i = 0; i < figureCount; i++) {
       const x = -12.5 + (i % 17) * 1.55;
       const z = i < 17 ? -8.6 : 8.6;
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.62, 6), colorMaterial(colorSet[(i * 3) % colorSet.length]));
-      post.position.set(x, 0.15, z);
-      this.arena.add(post);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), colorMaterial(colorSet[(i * 7 + 1) % colorSet.length]));
-      head.position.set(x, 0.58, z);
-      this.arena.add(head);
+      const shirt = new THREE.Color(colorSet[(i * 3) % colorSet.length]!);
+      const skin = new THREE.Color(colorSet[(i * 7 + 1) % colorSet.length]!);
+      this.crowdFigures.push({ x, z, phase: (i % 17) * 0.73 + Math.floor(i / 17) * 0.4 });
+      this.crowdBodies.setColorAt(i, shirt);
+      this.crowdHeads.setColorAt(i, skin);
+      this.crowdArms.setColorAt(i * 2, shirt);
+      this.crowdArms.setColorAt(i * 2 + 1, shirt);
     }
+    if (this.crowdBodies.instanceColor) this.crowdBodies.instanceColor.needsUpdate = true;
+    if (this.crowdHeads.instanceColor) this.crowdHeads.instanceColor.needsUpdate = true;
+    if (this.crowdArms.instanceColor) this.crowdArms.instanceColor.needsUpdate = true;
+    this.updateCrowd(0, 0);
+  }
+
+  private updateCrowd(elapsed: number, dt: number) {
+    if (!this.crowdBodies || !this.crowdHeads || !this.crowdArms) return;
+    this.crowdEnergy = Math.max(0, this.crowdEnergy - dt * 0.82);
+    const cheer = this.crowdEnergy;
+    const apply = (mesh: THREE.InstancedMesh, slot: number, x: number, y: number, z: number, rotationZ = 0, rotationX = 0, scaleY = 1) => {
+      this.crowdTransform.position.set(x, y, z);
+      this.crowdTransform.rotation.set(rotationX, 0, rotationZ);
+      this.crowdTransform.scale.set(1, scaleY, 1);
+      this.crowdTransform.updateMatrix();
+      mesh.setMatrixAt(slot, this.crowdTransform.matrix);
+    };
+    for (const [index, fan] of this.crowdFigures.entries()) {
+      const pose = crowdPose(elapsed, fan.phase, cheer);
+      apply(this.crowdBodies, index, fan.x, 0.15 + pose.bounce, fan.z, 0, 0, pose.bodyScale);
+      apply(this.crowdHeads, index, fan.x, 0.58 + pose.bounce * 1.2, fan.z, 0, 0, pose.headScale);
+      for (const [arm, side] of [-1, 1].entries()) {
+        const armPose = pose.arms[arm]!;
+        apply(this.crowdArms, index * 2 + arm, fan.x + side * 0.2, 0.38 + pose.bounce, fan.z + 0.025, armPose.rotationZ, armPose.rotationX);
+      }
+    }
+    this.crowdBodies.instanceMatrix.needsUpdate = true;
+    this.crowdHeads.instanceMatrix.needsUpdate = true;
+    this.crowdArms.instanceMatrix.needsUpdate = true;
   }
 
   private buildCourtIdentity(id: CourtId) {
@@ -645,6 +707,7 @@ export class MatchRenderer {
     const impactY = Math.cos(impactPhase * 0.72) * impactEnvelope * 0.045;
     this.camera.lookAt(this.cameraTarget.x + impactX, this.cameraTarget.y + impactY, this.cameraTarget.z);
     if (this.impactRemaining === 0) this.impactPower = 0;
+    this.updateCrowd(state.elapsed, dt);
     this.updateParticles(dt);
     this.renderer.render(this.scene, this.camera);
   }
@@ -660,6 +723,7 @@ export class MatchRenderer {
 
   celebrate(team: TeamId, color: string, position: { x: number; z: number }) {
     this.impact(1);
+    this.crowdEnergy = 1;
     this.emitBurst(position, color, 64, 0.8);
     this.scene.background = new THREE.Color(team === 0 ? '#ffb455' : '#53ccbc');
     window.setTimeout(() => { this.scene.background = new THREE.Color(COURT_PALETTES[this.currentCourt].background); }, 620);
