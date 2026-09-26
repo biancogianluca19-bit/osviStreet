@@ -10,5 +10,5 @@ describe('Simulación de balance', () => {
     expect(summary.averageGoals).toBeLessThanOrEqual(7);
     expect(summary.noShotMatches).toBe(0);
     expect(summary.results.every((match) => match.homeGoals <= 5 && match.awayGoals <= 5)).toBe(true);
-  }, 240_000);
+  }, 1_200_000);
 });

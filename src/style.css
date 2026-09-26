@@ -65,6 +65,60 @@ h1, h2, p { margin: 0; }
 .career-track { grid-column: 2; grid-row: 1; height: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,.23); border-radius: 6px; background: rgba(22,22,36,.45); }
 .career-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--mint),var(--sun)); transition: width .35s ease; }
 .career-progress > span { grid-column: 2; grid-row: 2; color: rgba(255,247,223,.67); font-size: 7px; }
+.locker-feedback { min-height: 10px; margin-top: 4px !important; color: var(--mint) !important; font: 900 8px/1.1 'DM Sans', sans-serif !important; letter-spacing: .05em; }
+.career-card { position: absolute; z-index: 4; top: 50%; right: clamp(28px, 6.5vw, 98px); display: flex; width: min(318px, 29vw); flex-direction: column; gap: 12px; padding: 15px; transform: translateY(-50%); border: 1px solid rgba(255,255,255,.26); border-radius: 17px; background: rgba(24, 24, 39, .82); box-shadow: 0 18px 44px rgba(22,17,31,.3); backdrop-filter: blur(12px); }
+.career-card.hidden { display: none; }
+.career-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.career-card-head > div { display: grid; gap: 3px; }
+.career-card-head span, .daily-eyebrow, .career-records span { color: rgba(255,247,223,.66); font: 900 8px/1 'DM Sans', sans-serif; letter-spacing: .13em; }
+.career-card-head strong { color: var(--sun); font: 900 17px/.9 'Barlow Condensed', Impact, sans-serif; letter-spacing: .06em; }
+.career-card-head > b { color: var(--mint); font: 900 18px/1 'Barlow Condensed', Impact, sans-serif; white-space: nowrap; }
+.career-xp-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; color: rgba(255,247,223,.7); font: 700 9px/1 'DM Sans', sans-serif; }
+.career-xp-row .career-track { grid-column: auto; grid-row: auto; height: 7px; }
+.daily-card { display: grid; gap: 8px; padding: 12px; border: 1px solid rgba(255,223,92,.34); border-radius: 12px; background: linear-gradient(145deg, rgba(255,223,92,.12), rgba(255,255,255,.035)); transition: border-color .2s ease, background .2s ease; }
+.daily-card.daily-complete { border-color: rgba(76,225,192,.72); background: linear-gradient(145deg, rgba(76,225,192,.18), rgba(255,255,255,.035)); }
+.daily-eyebrow { display: flex; justify-content: space-between; color: var(--mint); }
+.daily-eyebrow b { color: rgba(255,247,223,.58); font-size: 7px; }
+.daily-card h2 { color: var(--sun); font: 900 19px/.95 'Barlow Condensed', Impact, sans-serif; letter-spacing: .04em; }
+.daily-card p { color: rgba(255,247,223,.8); font: 600 10px/1.3 'DM Sans', sans-serif; }
+.daily-progress-track { height: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.14); }
+.daily-progress-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--mint),var(--sun)); transition: width .35s ease; }
+.daily-progress-label { color: rgba(255,247,223,.76); font: 800 8px/1 'DM Sans', sans-serif; letter-spacing: .05em; }
+.daily-play-button { display: flex; min-height: 40px; align-items: center; justify-content: space-between; padding: 0 11px; border: 1px solid var(--sun); border-radius: 8px; background: var(--sun); color: var(--ink); font: 900 11px/1 'Barlow Condensed', Impact, sans-serif; letter-spacing: .1em; cursor: pointer; transition: transform .1s ease, filter .1s ease; }
+.daily-play-button span { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 50%; background: var(--ink); color: var(--sun); font: 800 14px/1 'DM Sans', sans-serif; }
+.daily-play-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.daily-play-button:active { transform: translateY(2px) scale(.98); }
+.career-records { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+.career-records > div { display: grid; justify-items: center; gap: 4px; min-width: 0; padding: 7px 3px; border-radius: 8px; background: rgba(255,255,255,.07); text-align: center; }
+.career-records strong { color: var(--cream); font: 900 18px/.9 'Barlow Condensed', Impact, sans-serif; }
+.career-records span { font-size: 6px; line-height: 1.1; letter-spacing: .06em; }
+.next-reward-row { display: flex; align-items: center; justify-content: space-between; gap: 7px; color: rgba(255,247,223,.72); font: 900 7px/1 'DM Sans', sans-serif; letter-spacing: .08em; }
+.next-reward-row b { color: var(--sun); font: 900 9px/1 'Barlow Condensed', Impact, sans-serif; white-space: nowrap; }
+.next-reward-track { height: 5px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.13); }
+.next-reward-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--coral),var(--sun)); transition: width .3s ease; }
+.achievement-open { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: rgba(255,255,255,.08); color: var(--cream); font: 900 9px/1 'Barlow Condensed', Impact, sans-serif; letter-spacing: .08em; cursor: pointer; transition: background .12s ease, transform .1s ease; }
+.achievement-open b { color: var(--mint); font: 900 10px/1 'DM Sans', sans-serif; }
+.achievement-open:hover, .achievement-open:active { transform: translateY(-1px); background: rgba(76,225,192,.16); }
+.achievement-overlay { position: absolute; z-index: 25; inset: 0; display: grid; place-items: center; padding: 14px; background: rgba(16,16,27,.72); backdrop-filter: blur(8px); animation: overlay-in .18s ease both; }
+.achievement-overlay.hidden { display: none; }
+.achievement-dialog { display: flex; width: min(760px, calc(100vw - 28px)); max-height: min(82dvh, 640px); flex-direction: column; gap: 9px; padding: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.23); border-radius: 16px; background: rgba(25,24,39,.97); box-shadow: 0 22px 65px rgba(8,7,18,.5); }
+.achievement-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.achievement-dialog header > div { display: grid; gap: 3px; }
+.achievement-dialog header span { color: var(--mint); font: 900 8px/1 'DM Sans',sans-serif; letter-spacing: .14em; }
+.achievement-dialog h2 { color: var(--sun); font: 900 clamp(24px,4vw,36px)/.9 'Barlow Condensed',Impact,sans-serif; }
+.achievement-dialog header button { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; background: rgba(255,255,255,.08); color: var(--cream); font: 600 24px/1 'DM Sans',sans-serif; cursor: pointer; }
+.achievement-dialog header button:active { transform: scale(.92); background: var(--coral); }
+.achievement-dialog > p { color: rgba(255,247,223,.72); font: 700 10px/1 'DM Sans',sans-serif; }
+.achievement-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; min-height: 0; padding: 1px 3px 4px 1px; overflow: auto; overscroll-behavior: contain; }
+.achievement-item { display: grid; grid-template-columns: 30px minmax(0,1fr); align-items: center; gap: 8px; min-height: 66px; padding: 8px; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; background: rgba(255,255,255,.045); }
+.achievement-item.earned { border-color: rgba(76,225,192,.52); background: rgba(76,225,192,.09); }
+.achievement-badge { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: rgba(255,223,92,.13); color: var(--sun); font: 900 12px/1 'DM Sans',sans-serif; }
+.achievement-item.earned .achievement-badge { background: var(--mint); color: var(--ink); }
+.achievement-copy { display: grid; min-width: 0; gap: 4px; }
+.achievement-copy strong { overflow: hidden; color: var(--cream); font: 900 11px/1 'Barlow Condensed',Impact,sans-serif; letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
+.achievement-copy span { overflow: hidden; color: rgba(255,247,223,.62); font: 600 8px/1.2 'DM Sans',sans-serif; text-overflow: ellipsis; }
+.achievement-copy b { color: var(--mint); font: 800 7px/1 'DM Sans',sans-serif; }
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
 .tournament-status { margin-top: 8px; color: var(--mint); font: 900 9px/1.2 'Barlow Condensed', Impact, sans-serif; letter-spacing: .06em; }
 .difficulty-picker { display: flex; min-width: 98px; min-height: 49px; flex-direction: column; justify-content: center; gap: 4px; margin-top: 19px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.38); border-radius: 9px; background: rgba(25,24,38,.52); box-shadow: 0 4px 11px rgba(17,15,28,.14); }
 .difficulty-picker span { color: rgba(255,247,223,.68); font-size: 6px; font-weight: 900; letter-spacing: .16em; }
@@ -74,6 +128,33 @@ h1, h2, p { margin: 0; }
 .intro-meta i { display: block; width: 3px; height: 3px; border-radius: 50%; background: var(--sun); }
 .corner-label { position: absolute; z-index: 3; right: clamp(15px, 3vw, 40px); bottom: 17px; display: flex; gap: 15px; color: rgba(255, 247, 224, .74); font-size: 8px; font-weight: 800; letter-spacing: .13em; text-shadow: 0 1px 5px rgba(30,20,35,.35); }
 .match-active .corner-label { display: none; }
+
+@media (max-width: 1024px) and (orientation: landscape) {
+  .intro-panel { left: 4.5vw; width: min(485px, 53vw); }
+  .intro-panel h1 { margin-top: 11px; font-size: clamp(44px, 11.5vh, 57px); }
+  .intro-panel p { margin-top: 9px; font-size: 11px; }
+  .primary-button, .difficulty-picker { min-height: 44px; margin-top: 12px; }
+  .mode-row { gap: 7px; margin-top: 8px; }
+  .mode-button { min-height: 43px; }
+  .mode-button b { font-size: 11px; }
+  .mode-button span { font-size: 8px; }
+  .locker-row { gap: 5px; margin-top: 8px; }
+  .locker-row > strong { font-size: 9px; }
+  .locker-row label { padding: 5px 6px; font-size: 7px; }
+  .locker-row select { font-size: 9px; }
+  .intro-meta { margin-top: 10px; font-size: 8px; }
+  .career-card { right: 3.5vw; width: min(278px, 30vw); gap: 9px; padding: 12px; }
+  .career-card { top: calc(50% + 14px); }
+  .daily-card { gap: 6px; padding: 10px; }
+  .daily-card h2 { font-size: 17px; }
+  .daily-card p { font-size: 9px; }
+  .daily-play-button { min-height: 37px; }
+  .career-records > div { padding: 6px 2px; }
+  .career-card { gap: 7px; padding: 10px; }
+  .achievement-dialog { padding: 12px; }
+  .achievement-grid { gap: 5px; }
+  .achievement-item { min-height: 60px; gap: 6px; padding: 6px; }
+}
 
 .match-hud { position: absolute; z-index: 8; top: max(9px, env(safe-area-inset-top)); left: 50%; display: grid; grid-template-columns: minmax(0, 1fr) 78px minmax(0, 1fr); align-items: center; width: min(510px, calc(100vw - 28px)); min-height: 58px; padding: 6px 76px 6px 14px; transform: translateX(-50%); border: 1px solid rgba(255, 255, 255, .18); border-radius: 12px; background: var(--glass); box-shadow: 0 8px 26px rgba(26, 20, 34, .2); backdrop-filter: blur(12px); }
 .match-hud.hidden { display: none; }

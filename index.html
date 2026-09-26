@@ -28,13 +28,40 @@
       <section class="intro-panel" id="intro-panel" aria-labelledby="intro-title">
         <div class="eyebrow"><span class="live-dot"></span> FÚTBOL DE ESQUINA · 5 CONTRA 5</div>
         <h1 id="intro-title">TU BARRIO.<br><span>TUS REGLAS.</span></h1>
-        <p>La jaula está abierta. Ganá el partido y hacete dueño de la cancha.</p>
+        <p>La jaula está abierta. Sumá goles, monedas y estilo.</p>
         <div class="play-row"><button class="primary-button" id="start-match"><span>PARTIDO RÁPIDO</span><span class="button-arrow">↗</span></button><label class="difficulty-picker" for="difficulty-select"><span>DIFICULTAD</span><select id="difficulty-select"><option value="0" selected>TRANQUI</option><option value="1">NORMAL</option><option value="2">PICANTE</option></select></label></div>
         <div class="mode-row"><button class="mode-button" id="start-tournament"><b>🏆 COPA DE BARRIO</b><span>8 equipos · eliminación directa</span></button><button class="mode-button" id="start-local"><b>⚡ DUELO LOCAL</b><span>2 jugadores · mismo dispositivo</span></button></div>
         <div class="locker-row"><strong id="locker-count">0 VICTORIAS · VESTUARIO</strong><label>CAMISETA<select id="uniform-select" aria-label="Equipar camiseta"></select></label><label>BOTINES<select id="boots-select" aria-label="Equipar botines"></select></label><label>CANCHA<select id="court-select" aria-label="Elegir cancha"></select></label></div>
-        <div class="career-progress" aria-label="Progreso de temporada"><strong id="career-level">NIVEL 1</strong><div class="career-track"><i id="career-fill"></i></div><span id="career-xp">0 / 100 XP</span><b id="career-coins">0 🪙</b></div>
+        <p class="locker-feedback" id="locker-feedback" aria-live="polite"></p>
         <p class="tournament-status hidden" id="tournament-status"></p>
         <div class="intro-meta"><span>3 MINUTOS</span><i></i><span>PRIMERO A 5</span><i></i><span>SIN OFFSIDE</span></div>
+      </section>
+      <aside class="career-card" id="career-card" aria-label="Carrera, reto diario y récords">
+        <div class="career-card-head"><div><span>TEMPORADA DE BARRIO</span><strong id="career-level">NIVEL 1</strong></div><b id="career-coins">0 🪙</b></div>
+        <div class="career-xp-row"><div class="career-track"><i id="career-fill"></i></div><span id="career-xp">0 / 100 XP</span></div>
+        <div class="next-reward-row"><span id="next-reward-label">SIGUIENTE PREMIO</span><b id="next-reward-count">0 / 35</b></div>
+        <div class="next-reward-track"><i id="next-reward-fill"></i></div>
+        <section class="daily-card" id="daily-card" aria-label="Desafío diario">
+          <div class="daily-eyebrow"><span>RETO DE HOY</span><b>24 H</b></div>
+          <h2 id="daily-title">CALENTAR LA JAULA</h2>
+          <p id="daily-description">Jugá un partido rápido.</p>
+          <div class="daily-progress-track"><i id="daily-fill"></i></div>
+          <span class="daily-progress-label" id="daily-progress">0 / 1 · +50 MONEDAS</span>
+          <button id="start-challenge" class="daily-play-button">JUGAR AHORA <span>↗</span></button>
+        </section>
+        <div class="career-records" aria-label="Récords del barrio">
+          <div><strong id="record-best">0</strong><span>GOLES EN UN PARTIDO</span></div>
+          <div><strong id="record-goals">0</strong><span>GOLES TOTALES</span></div>
+          <div><strong id="record-streak">0</strong><span>MEJOR RACHA</span></div>
+        </div>
+        <button class="achievement-open" id="achievements-button"><span>🏅 LOGROS DEL BARRIO</span><b id="achievement-count">0 / 15</b></button>
+      </aside>
+      <section class="achievement-overlay hidden" id="achievements-panel" aria-label="Logros del barrio">
+        <div class="achievement-dialog" role="dialog" aria-modal="true" aria-labelledby="achievement-title">
+          <header><div><span>COLECCIÓN DE TEMPORADA</span><h2 id="achievement-title">LOGROS DEL BARRIO</h2></div><button id="close-achievements" aria-label="Cerrar logros">×</button></header>
+          <p id="achievement-summary">0 de 15 completados</p>
+          <div class="achievement-grid" id="achievement-grid"></div>
+        </div>
       </section>
       <section class="match-hud hidden" id="match-hud" aria-label="Marcador">
         <div class="team-score team-score-home"><span class="team-crest" id="crest-home" aria-hidden="true">LC</span><span class="score-team" id="team-home">LOS CANDELA</span><strong id="score-home">0</strong></div>

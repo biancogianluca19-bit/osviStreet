@@ -16,7 +16,7 @@ import { canUseSpecialShot } from './game/styleMeter';
 import { MatchRenderer } from './game/renderer';
 import { StreetAudio } from './game/audio';
 import { BOOT_STYLES, createQuickMatchTeams, createTournament, currentTournamentMatch, getStreetTeam, recordTournamentResult, STREET_TEAMS, teamOptions, tournamentRoundName, UNIFORM_STYLES, type TournamentState } from './game/modes';
-import { careerProgress, difficultyAfterWin, parseProgress, recordCompletedMatch, REWARDS, selectReward, type PlayerProgress } from './game/progress';
+import { achievementsFor, careerProgress, challengeForDay, difficultyAfterWin, parseProgress, purchaseReward, recordCompletedMatch, refreshDailyChallenge, REWARDS, selectReward, type PlayerProgress } from './game/progress';
 
 const el = <T extends HTMLElement>(id: string) => {
   const element = document.getElementById(id);
@@ -133,26 +133,68 @@ function fillLockerSelect(select: HTMLSelectElement, options: Array<{ value: str
   for (const optionData of options) {
     const option = document.createElement('option');
     option.value = optionData.value;
+    option.dataset.unlockId = optionData.unlockId;
     const permanentlyUnlocked = ['candela', 'classic', 'court-rooftop'].includes(optionData.unlockId);
     const isUnlocked = permanentlyUnlocked || progress.unlocked.includes(optionData.unlockId);
-    option.textContent = isUnlocked
-      ? optionData.label
-      : `${optionData.label} · ${REWARDS.find((reward) => reward.id === optionData.unlockId)?.winsRequired ?? 0} V`;
-    option.disabled = !isUnlocked;
+    const reward = REWARDS.find((item) => item.id === optionData.unlockId);
+    option.textContent = isUnlocked ? optionData.label : `${optionData.label} · ${reward?.priceCoins ?? 0} 🪙`;
+    option.disabled = !isUnlocked && (!reward || progress.coins < reward.priceCoins);
     select.add(option);
   }
   select.value = equipped;
 }
 
 function updateMenuProfile() {
+  const previousDay = progress.dailyChallenge.day;
+  progress = refreshDailyChallenge(progress);
+  if (progress.dailyChallenge.day !== previousDay) persistProgress();
   if (!difficultyChosen) difficultySelect.value = String(Math.min(progress.wins, 2));
-  const unlockCount = progress.unlocked.length;
-  el<HTMLElement>('locker-count').textContent = `${progress.wins} VICTORIAS · ${unlockCount} ${unlockCount === 1 ? 'DESBLOQUEO' : 'DESBLOQUEOS'}`;
+  const ownedCount = progress.unlocked.filter((id) => id !== 'court-rooftop').length;
+  el<HTMLElement>('locker-count').textContent = `${progress.wins} VICTORIAS · ${ownedCount} ${ownedCount === 1 ? 'ARTÍCULO' : 'ARTÍCULOS'}`;
   const career = careerProgress(progress.xp);
   el<HTMLElement>('career-level').textContent = `NIVEL ${career.level}`;
   el<HTMLElement>('career-xp').textContent = `${career.currentXp} / ${career.neededXp} XP`;
   el<HTMLElement>('career-coins').textContent = `${progress.coins} 🪙`;
   el<HTMLElement>('career-fill').style.width = `${career.currentXp / career.neededXp * 100}%`;
+  const daily = challengeForDay(progress.dailyChallenge.day);
+  el<HTMLElement>('daily-title').textContent = daily.title;
+  el<HTMLElement>('daily-description').textContent = daily.description;
+  el<HTMLElement>('daily-progress').textContent = progress.dailyChallenge.complete
+    ? `COMPLETO · +${daily.rewardCoins} MONEDAS`
+    : `${progress.dailyChallenge.value} / ${daily.target} · +${daily.rewardCoins} MONEDAS`;
+  el<HTMLElement>('daily-fill').style.width = `${progress.dailyChallenge.value / daily.target * 100}%`;
+  el<HTMLElement>('daily-card').classList.toggle('daily-complete', progress.dailyChallenge.complete);
+  el<HTMLElement>('record-best').textContent = String(progress.records.bestMatchGoals);
+  el<HTMLElement>('record-goals').textContent = String(progress.records.totalGoals);
+  el<HTMLElement>('record-streak').textContent = String(progress.records.bestWinStreak);
+  const nextReward = REWARDS.find((reward) => !progress.unlocked.includes(reward.id));
+  el<HTMLElement>('next-reward-label').textContent = nextReward ? `PRÓXIMO PREMIO · ${nextReward.label.toUpperCase()}` : 'VESTUARIO COMPLETO';
+  el<HTMLElement>('next-reward-count').textContent = nextReward ? `${Math.min(progress.coins, nextReward.priceCoins)} / ${nextReward.priceCoins} 🪙` : 'LISTO';
+  el<HTMLElement>('next-reward-fill').style.width = nextReward ? `${Math.min(100, progress.coins / nextReward.priceCoins * 100)}%` : '100%';
+  const achievements = achievementsFor(progress);
+  const completedAchievements = achievements.filter((achievement) => achievement.complete).length;
+  el<HTMLElement>('achievement-count').textContent = `${completedAchievements} / ${achievements.length}`;
+  el<HTMLElement>('achievement-summary').textContent = `${completedAchievements} de ${achievements.length} completados`;
+  const achievementGrid = el<HTMLDivElement>('achievement-grid');
+  achievementGrid.replaceChildren(...achievements.map((achievement) => {
+    const item = document.createElement('article');
+    item.className = 'achievement-item';
+    item.classList.toggle('earned', achievement.complete);
+    const badge = document.createElement('b');
+    badge.className = 'achievement-badge';
+    badge.textContent = achievement.complete ? '✓' : '✦';
+    const copy = document.createElement('div');
+    copy.className = 'achievement-copy';
+    const title = document.createElement('strong');
+    title.textContent = achievement.title;
+    const description = document.createElement('span');
+    description.textContent = achievement.description;
+    const count = document.createElement('b');
+    count.textContent = `${achievement.current} / ${achievement.target}${achievement.complete ? ' · LOGRADO' : ''}`;
+    copy.append(title, description, count);
+    item.append(badge, copy);
+    return item;
+  }));
   fillLockerSelect(uniformSelect, [
     { value: 'candela', label: UNIFORM_STYLES.candela.name, unlockId: 'candela' },
     { value: 'violet', label: UNIFORM_STYLES.violet.name, unlockId: 'uniform-violet' },
@@ -190,6 +232,7 @@ let renderScale = Math.min(window.devicePixelRatio || 1, 1.5);
 const keys = new Set<string>();
 let lastShownEventId = 0;
 let eventCalloutTimer = 0;
+let playerTricksInMatch = 0;
 const ACTION_BUFFER_MS = 1_400;
 
 function showMatchControls() {
@@ -309,10 +352,12 @@ function beginMatch(mode: GameMode = currentMode) {
   p2QueuedTrickUntil = 0;
   slowMotionRemaining = 0;
   lastShownEventId = game.eventId;
+  playerTricksInMatch = 0;
   eventCalloutTimer = 0;
   eventCallout.classList.remove('show', 'goal-callout', 'trick-callout');
   eventCallout.textContent = '';
   intro.classList.add('hidden');
+  el<HTMLElement>('career-card').classList.add('hidden');
   pausePanel.classList.add('hidden');
   resultPanel.classList.add('hidden');
   hud.classList.remove('hidden');
@@ -358,6 +403,7 @@ function exitMatch() {
   running = false;
   audio.setScene('menu');
   intro.classList.remove('hidden');
+  el<HTMLElement>('career-card').classList.remove('hidden');
   hud.classList.add('hidden');
   pausePanel.classList.add('hidden');
   resultPanel.classList.add('hidden');
@@ -409,11 +455,12 @@ function finishMatch() {
     el<HTMLButtonElement>('replay-match').classList.remove('hidden');
   }
   if (!matchProgressRecorded) {
-    const awarded = recordCompletedMatch(progress, currentMode === 'local' ? !tie : won);
+    const awarded = recordCompletedMatch(progress, currentMode === 'local' ? home > away : won, { goals: home, tricks: playerTricksInMatch });
     progress = awarded.progress;
     persistProgress();
     resultNotes.push(`+${awarded.coinsEarned} MONEDAS · +${awarded.xpEarned} XP.`);
     if (awarded.newUnlocks.length) resultNotes.push(`Desbloqueado: ${awarded.newUnlocks.map((reward) => reward.label).join(', ')}.`);
+    if (awarded.dailyCompleted) resultNotes.push('RETO DEL DÍA COMPLETADO.');
     matchProgressRecorded = true;
   }
   if (currentMode === 'quick' && won && !difficultyChosen) {
@@ -500,6 +547,7 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
       || (currentMode === 'local' && event.team === 1 && event.playerId === inputPlayers.team1)));
 
   for (const event of unseen) {
+    if (event.type === 'trick' && event.team === 0 && event.playerId === inputPlayers.team0) playerTricksInMatch += 1;
     if (event.type === 'kick' || event.type === 'special') {
       if (event.playerId === inputPlayers.team0 && event.team === 0) {
         queuedAction = undefined;
@@ -656,6 +704,25 @@ function showControlNotice(text: string) {
 }
 
 el<HTMLButtonElement>('start-match').addEventListener('click', () => beginMatch('quick'));
+el<HTMLButtonElement>('start-challenge').addEventListener('click', () => beginMatch('quick'));
+const achievementsPanel = el<HTMLElement>('achievements-panel');
+const achievementsButton = el<HTMLButtonElement>('achievements-button');
+const closeAchievementsButton = el<HTMLButtonElement>('close-achievements');
+achievementsButton.addEventListener('click', () => {
+  achievementsPanel.classList.remove('hidden');
+  closeAchievementsButton.focus();
+});
+function closeAchievements() {
+  achievementsPanel.classList.add('hidden');
+  achievementsButton.focus();
+}
+closeAchievementsButton.addEventListener('click', closeAchievements);
+achievementsPanel.addEventListener('pointerdown', (event) => {
+  if (event.target === achievementsPanel) closeAchievements();
+});
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !achievementsPanel.classList.contains('hidden')) closeAchievements();
+});
 el<HTMLButtonElement>('start-tournament').addEventListener('click', startTournament);
 el<HTMLButtonElement>('start-local').addEventListener('click', () => beginMatch('local'));
 el<HTMLButtonElement>('pause-match').addEventListener('click', pauseMatch);
@@ -670,10 +737,24 @@ el<HTMLButtonElement>('result-menu').addEventListener('click', exitMatch);
 difficultySelect.addEventListener('change', () => { difficultyChosen = true; });
 el<HTMLButtonElement>('skip-tutorial').addEventListener('click', finishTutorial);
 
-function onLockerChange() {
-  progress = selectReward(progress, uniformSelect.value);
-  progress = selectReward(progress, bootsSelect.value);
-  progress = selectReward(progress, courtSelect.value);
+function onLockerChange(event: Event) {
+  const changed = event.currentTarget as HTMLSelectElement;
+  const rewardId = changed.selectedOptions[0]?.dataset.unlockId;
+  if (rewardId && !progress.unlocked.includes(rewardId) && !['candela', 'classic', 'court-rooftop'].includes(rewardId)) {
+    const purchase = purchaseReward(progress, rewardId);
+    if (!purchase.purchased) {
+      el<HTMLElement>('locker-feedback').textContent = purchase.reason === 'coins' ? 'TE FALTAN MONEDAS.' : 'NO SE PUDO COMPRAR.';
+      updateMenuProfile();
+      return;
+    }
+    progress = purchase.progress;
+    el<HTMLElement>('locker-feedback').textContent = `COMPRADO: ${purchase.purchased.label.toUpperCase()}`;
+  } else {
+    el<HTMLElement>('locker-feedback').textContent = '';
+  }
+  progress = selectReward(progress, uniformSelect.selectedOptions[0]?.dataset.unlockId ?? uniformSelect.value);
+  progress = selectReward(progress, bootsSelect.selectedOptions[0]?.dataset.unlockId ?? bootsSelect.value);
+  progress = selectReward(progress, courtSelect.selectedOptions[0]?.dataset.unlockId ?? courtSelect.value);
   persistProgress();
   updateMenuProfile();
   renderer.setCourt(progress.court);

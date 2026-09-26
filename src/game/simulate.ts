@@ -30,11 +30,13 @@ export function simulateAiMatch(seed: number, difficulty: Difficulty = 1): Simul
   let seenEventId = state.eventId;
   for (let frame = 0; frame < maxFrames && state.phase !== 'finished'; frame++) {
     stepMatch(state, idle, 1 / 60, difficulty, true);
-    for (const event of state.events) {
-      if (event.id <= seenEventId) continue;
-      if (event.type === 'trick') tricks += 1;
+    if (state.eventId !== seenEventId) {
+      for (const event of state.events) {
+        if (event.id <= seenEventId) continue;
+        if (event.type === 'trick') tricks += 1;
+      }
+      seenEventId = state.eventId;
     }
-    seenEventId = state.eventId;
   }
   return {
     homeGoals: state.teams[0].score,

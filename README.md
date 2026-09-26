@@ -64,8 +64,9 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - El primer partido rápido empieza en Tranqui con asistencia de movimiento y un tutorial jugable de 20 segundos que se puede omitir. Cada victoria sube un nivel la dificultad automática, hasta Picante; elegir una dificultad manual desactiva el ajuste automático.
 - Copa de eliminación directa entre ocho equipos ficticios. Los resultados de las rondas fijan la llave; los empates se definen a un toque de oro.
 - Duelo local para dos jugadores en la misma pantalla.
-- Ganar desbloquea uniformes, botines y canchas. El vestuario guarda los cambios en el almacenamiento local.
-- Cada resultado suma monedas y XP; las victorias entregan 40 monedas y 75 XP, y las derrotas 15 monedas y 35 XP. El nivel y su barra se muestran en el menú. Las monedas todavía no se pueden gastar.
+- El vestuario vende siete camisetas, pares de botines y canchas entre 35 y 180 monedas. Elegir un artículo lo compra, lo equipa y conserva la selección en el almacenamiento local.
+- Cada resultado suma monedas y XP; las victorias entregan 40 monedas y 75 XP, y las derrotas 15 monedas y 35 XP. La portada muestra nivel, barra de XP, saldo y progreso hacia el próximo artículo.
+- Hay un desafío diario rotativo con progreso y premio de una sola vez, cinco récords locales y quince logros que avanzan con partidos, goles, trucos, rachas y compras.
 - Música, efectos e hinchada tienen controles de volumen separados y guardan sus valores en el dispositivo. El menú y el partido usan frases musicales distintas; pase, barrida y botones tienen efectos propios.
 - Los jugadores tienen brazos y piernas articulados con ciclo de carrera; los arqueros inclinan el cuerpo al desplazarse. Los modelos procedurales usan más detalles de uniforme y cara.
 - Cuatro canchas caricaturescas: terraza al atardecer, jaula de grafitis, playa y galpón neón.
@@ -81,7 +82,7 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - `src/game/ai.ts`: presión, apoyos, pared, trucos y arqueros.
 - `src/game/simulate.ts`: simulación reproducible entre dos equipos de IA.
 - `src/game/modes.ts`: equipos ficticios y torneo.
-- `src/game/progress.ts`: monedas, XP, niveles, premios y estado del vestuario.
+- `src/game/progress.ts`: monedas, XP, niveles, tienda, desafío diario, récords, logros y estado del vestuario.
 - `src/game/tricks.ts`, `src/game/styleMeter.ts`: ocho trucos y barra de estilo.
 - `src/game/renderer.ts`: cancha y jugadores 3D, efectos visuales y ajuste dinámico de resolución.
 - `src/game/audio.ts`: música y sonidos sintetizados con Web Audio.
@@ -94,11 +95,12 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 ## Verificación y revisión
 
-- `pnpm test --exclude tests/aiBalance.test.ts`: pasó **31 tests** en cinco archivos en la ronda 2. Una repetición a 30 Hz para el test de balance dio 7,995 goles de promedio, por lo que se descartó y se restauró el simulador de reglas a 60 Hz. La última simulación aceptada a 60 Hz completó 200 partidos con promedio de **5,175 goles** y **37,38 remates**, sin partidos sin remates.
+- `pnpm test --exclude tests/aiBalance.test.ts --reporter=verbose`: pasó **37 tests** en cinco archivos en la ronda 3. Incluye compras, migración de guardados, cuatro retos diarios y quince logros. Una simulación experimental a 30 Hz dio 7,995 goles y se descartó. La simulación completa a 60 Hz más reciente registró **5,525 goles** y **39,26 remates** de promedio, sin partidos sin remates (78 victorias locales, 77 visitantes y 45 empates). La repetición más reciente se interrumpió tras más de 19 minutos; optimicé el recuento de eventos y amplié el límite local a 1.200 segundos. El workflow de `5aac843` completó tests/build, APK, Pages y prerelease: [ver ejecución y APK](https://github.com/biancogianluca19-bit/osviStreet/actions/runs/36222687147).
 - `pnpm build`: compila TypeScript y Vite.
 - Interfaz revisada en navegador a **915 × 412** y **480 × 320**. Pase y barrida se tocaron durante un partido; el saque aceptó el pase en espera y ambos mostraron confirmación en pantalla.
 - En la ronda 1, Playwright confirmó que los botones principales miden **78 × 78 px** a 915 × 412 y que **Omitir** cierra el tutorial. Las capturas comparables están en `outputs/captures/round-0/` y `outputs/captures/round-1/`.
 - En la ronda 2 revisé las cuatro capturas en 1366 × 768 y 915 × 412. La barra de nivel y las acciones táctiles caben en pantalla; el saldo queda visualmente pequeño a 915 × 412. Las imágenes están en `outputs/captures/round-2-after/`.
+- En la ronda 3 revisé el menú y el partido a 1366 × 768 y 915 × 412, además del panel de logros. Emulé toques a Pase y Barrida; probé iniciar el reto, abrir/cerrar logros, comprar y equipar una camiseta. Las capturas comparables están en `outputs/captures/round-2-after/` y `outputs/captures/round-3-after/`.
 - Los ocho gestos de truco y el selector táctil se comprobaron con eventos de puntero.
 - Se revisó que saques, posesión, goles y recompensas sigan las reglas fuera del renderer y que la copa avance con los resultados guardados.
 
@@ -110,6 +112,7 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - La copa usa resultados de una misma llave; los premios bloqueados no se pueden equipar.
 - Cada jugador del duelo local tiene entrada independiente en teclado y táctil, incluido el gesto de trucos.
 - Ronda 2: modelos de jugador con extremidades articuladas, volúmenes separados para música/efectos/hinchada, efectos de pase/barrida/interfaz y barra persistente de monedas/XP/nivel.
+- Ronda 3: tienda de monedas con equipamiento real, reto diario con premio único, récords locales y panel con quince logros. La tarjeta móvil muestra el progreso hasta el siguiente artículo.
 - El duelo local muestra una barra de estilo independiente por jugador y elige el remate especial de cada lado.
 - Los ocho equipos tienen un escudo monogramado propio en el marcador y paletas separadas.
 - Los rótulos de gol y truco se limpian al iniciar otro partido y al cambiar el tipo de evento.

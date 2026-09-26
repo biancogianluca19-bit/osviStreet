@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createTournament, currentTournamentMatch, recordTournamentResult, STREET_TEAMS, teamOptions } from '../src/game/modes';
-import { freshProgress, parseProgress, recordCompletedMatch, selectReward } from '../src/game/progress';
+import { freshProgress, parseProgress, purchaseReward, recordCompletedMatch, selectReward } from '../src/game/progress';
 import { createMatch, stepMatch } from '../src/game/rules';
 
 describe('Fase 4: modos y recompensas', () => {
@@ -31,18 +31,22 @@ describe('Fase 4: modos y recompensas', () => {
     expect(cup.championId).toBe(cup.playerTeamId);
   });
 
-  it('guarda victorias y habilita uniformes, botines y canchas', () => {
-    let profile = freshProgress();
-    const first = recordCompletedMatch(profile, true);
-    profile = first.progress;
-    expect(first.newUnlocks.map((reward) => reward.id)).toContain('uniform-violet');
-    expect(selectReward(profile, 'boots-neon').boots).toBe('classic');
-    profile = recordCompletedMatch(profile, true).progress;
-    expect(selectReward(profile, 'boots-neon').boots).toBe('neon');
-    profile = recordCompletedMatch(profile, true).progress;
-    expect(profile.unlocked).toContain('court-graffiti');
+  it('convierte monedas de partidos en cosméticos equipables que persisten', () => {
+    let profile = { ...freshProgress(), coins: 140 };
+    expect(selectReward(profile, 'uniform-violet').uniform).toBe('candela');
+    profile = purchaseReward(profile, 'uniform-violet').progress;
+    profile = selectReward(profile, 'uniform-violet');
+    expect(profile).toMatchObject({ coins: 105, uniform: 'violet' });
+    profile = purchaseReward(profile, 'court-graffiti').progress;
     profile = selectReward(profile, 'court-graffiti');
-    expect(parseProgress(JSON.stringify(profile))).toMatchObject({ wins: 3, court: 'court-graffiti' });
+    expect(parseProgress(JSON.stringify(profile))).toMatchObject({ court: 'court-graffiti', unlocked: expect.arrayContaining(['uniform-violet', 'court-graffiti']) });
+    expect(profile.coins).toBe(15);
+  });
+
+  it('el saldo y los récords avanzan al completar partidos y nunca regalan artículos', () => {
+    const result = recordCompletedMatch(freshProgress(), true, { goals: 2, tricks: 1 });
+    expect(result.newUnlocks).toEqual([]);
+    expect(result.progress).toMatchObject({ wins: 1, matches: 1, coins: expect.any(Number), records: { bestMatchGoals: 2, totalGoals: 2, totalTricks: 1 } });
   });
 
   it('deja controlar y rematar con el jugador 2 en el mismo dispositivo', () => {

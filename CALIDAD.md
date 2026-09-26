@@ -87,7 +87,23 @@ Menú en ambos tamaños y capturas originales están en `outputs/captures/round-
 
 Antes: menú a 915 × 412 y partido a 1366 × 768, en [`round-1/`](outputs/captures/round-1/). Después: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [partido a 1366 × 768](outputs/captures/round-2-after/match-1366x768.png). Las otras dos vistas están junto a estas en `round-2-after/`.
 
-La corrida de 200 partidos a 30 Hz dio 7,995 goles de promedio y se descartó por cambiar el balance. `simulate.ts` volvió a 60 Hz. La referencia aceptada sigue siendo la simulación de 200 partidos a 60 Hz: 5,175 goles, 37,38 remates y cero partidos sin remates.
+La corrida experimental de 200 partidos a 30 Hz dio 7,995 goles y se descartó porque cambió el balance. La simulación completa a 60 Hz registró **5,525 goles** y **39,26 remates** de promedio, con **cero partidos sin remates**; los resultados fueron 78 victorias locales, 77 visitantes y 45 empates. Una repetición local fue detenida tras más de 19 minutos al seguir ocupando la máquina. Optimicé el contador de eventos, que antes recorría la cola cada frame incluso si no había eventos nuevos, y ahora volveré a ejecutar el test. El límite local está fijado en 1.200 segundos. El workflow de GitHub para `5aac843` terminó con éxito en tests/build, APK, Pages y prerelease.
+
+## Ronda 3 · tienda, desafío diario y logros
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 8/10 | La portada destaca el botón de partido y presenta un desafío jugable del día con premio. La carrera, su moneda y el siguiente cosmético están visibles sin entrar a otra pantalla. |
+| Sensación al jugar | 7/10 | Volví a tocar Pase y Barrida con emulación táctil a 915 × 412; ambos botones recibieron el toque y pusieron la acción en cola. Sus áreas grandes siguen dentro del borde inferior. |
+| Gráficos | 6/10 | La portada organiza vestuario y carrera en tarjetas con la misma paleta y tipografía. Los modelos, contornos toon, cámara y cancha 3D no cambiaron esta ronda. |
+| Sonido | 5/10 | Sin cambios en música, mezcla ni efectos. |
+| Progresión | 8/10 | Las monedas compran siete artículos cosméticos; una compra equipa el objeto y persiste. Hay cuatro retos diarios rotativos, premio único por completar, cinco récords locales, barra al siguiente artículo y quince logros con avances guardados. |
+
+**Puntuación de ronda 3:** 34/50. Comparé las capturas de ronda 2 con las nuevas en 1366 × 768 y 915 × 412. La tarjeta de carrera queda a 56 px del borde superior y 28 px del inferior en 915 × 412. Revisé también la lista desplazable de logros; los quince artículos existen, sin recorte horizontal.
+
+### Capturas comparables de ronda 3
+
+Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [partido a 1366 × 768](outputs/captures/round-2-after/match-1366x768.png). Después: [menú a 915 × 412](outputs/captures/round-3-after/menu-915x412.png), [partido a 915 × 412](outputs/captures/round-3-after/match-915x412.png), [logros en móvil](outputs/captures/round-3-after/achievements-915x412.png) y [menú a 1366 × 768](outputs/captures/round-3-after/menu-1366x768.png).
 
 ## Puntuaciones por ronda
 
@@ -96,3 +112,4 @@ La corrida de 200 partidos a 30 Hz dio 7,995 goles de promedio y se descartó po
 | Base · 2026-09-25 | 5 | 4 | 5 | 3 | 3 | 20/50 |
 | Ronda 1 · 2026-09-26 | 7 | 6 | 5 | 3 | 3 | 24/50 |
 | Ronda 2 · 2026-09-26 | 7 | 7 | 6 | 5 | 4 | 29/50 |
+| Ronda 3 · 2026-09-26 | 8 | 7 | 6 | 5 | 8 | 34/50 |
