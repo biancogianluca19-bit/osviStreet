@@ -219,3 +219,18 @@ Antes: [partido móvil de ronda 7](outputs/captures/round-7-after/match-915x412.
 ### Capturas comparables de ronda 9
 
 Antes: [partido 1366 × 768](outputs/captures/round-8-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-8-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-9-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-9-after/match-915x412.png), [menú 1366 × 768](outputs/captures/round-9-after/menu-1366x768.png) y [menú 915 × 412](outputs/captures/round-9-after/menu-915x412.png).
+## Ronda 10 · mezcla al pausar
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Sin cambios. |
+| Sensación al jugar | 9/10 | El botón de pausa conserva la identidad sonora del partido y los efectos siguen al nivel elegido. |
+| Gráficos | 8/10 | Sin cambios visuales; las capturas a 1366 × 768 y 915 × 412 siguen completas. |
+| Sonido | 6/10 | Al pausar, música baja a 18%, público a 12% y los efectos mantienen volumen. Al reanudar, ambos niveles restauran con rampas cortas. Verifiqué los buses en Chrome; falta escuchar el resultado en un equipo real. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 10:** 40/50. Chrome confirmó la mezcla pausada y reanudada sin errores; no subo sonido sin una escucha física. Pasaron 43 tests en ocho archivos, build y simulación de 200 partidos (5,525 goles, 39,26 remates y cero partidos sin remates).
+
+### Capturas comparables de ronda 10
+
+Antes: [pausa móvil ronda 9 no capturada; partido 915 × 412](outputs/captures/round-9-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png), [pausa 915 × 412](outputs/captures/round-10-after/pause-915x412.png), [menú 1366 × 768](outputs/captures/round-10-after/menu-1366x768.png) y [menú 915 × 412](outputs/captures/round-10-after/menu-915x412.png).

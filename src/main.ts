@@ -342,6 +342,7 @@ async function beginMatch(mode: GameMode = currentMode) {
   matchStartPending = false;
   clearControlState();
   currentMode = mode;
+  audio.setPaused(false);
   audio.setScene('match');
   beginnerAssist = progress.matches === 0 && mode === 'quick';
   tutorialActive = mode === 'quick' && progress.matches === 0 && !progress.tutorialComplete;
@@ -416,7 +417,7 @@ function pauseMatch() {
   if (!running || game.phase === 'finished') return;
   clearControlState();
   paused = true;
-  audio.setScene('menu');
+  audio.setPaused(true);
   pausePanel.classList.remove('hidden');
   touchUi.classList.add('hidden');
   desktopHints.classList.add('hidden');
@@ -424,7 +425,7 @@ function pauseMatch() {
 
 function resumeMatch() {
   paused = false;
-  audio.setScene('match');
+  audio.setPaused(false);
   pausePanel.classList.add('hidden');
   showMatchControls();
   lastTime = performance.now();
@@ -434,6 +435,7 @@ function exitMatch() {
   clearControlState();
   paused = false;
   running = false;
+  audio.setPaused(false);
   audio.setScene('menu');
   intro.classList.remove('hidden');
   el<HTMLElement>('career-card').classList.remove('hidden');

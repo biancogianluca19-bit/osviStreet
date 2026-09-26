@@ -111,3 +111,13 @@
 - **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. Mantengo la nota visual: mejoró la lectura, pero la escena sigue geométrica y el rendimiento de Android no está medido.
 - **Pendiente:** instalar en teléfono Android, medir 60 FPS y revisar controles físicos, sonido y animaciones en movimiento.
 - **Siguiente:** optimizar el chunk 3D; mejorar el gesto visual del remate y capturar una atajada; medir FPS en Android de gama media; dar más espacio al campo en móvil sin reducir los botones; escuchar los arreglos en auriculares e integrar audio CC0 donde suene mejor.
+## Ronda 10 · mezcla al pausar
+
+- **Hora:** 2026-09-26, 15:35–15:44 ART.
+- **Hallazgo:** al pausar, la escena cambiaba al tema del menú; el ambiente de partido desaparecía y el volumen elegido no diferenciaba música de efectos.
+- **Cambios:** conservé el tema del partido y reduje música al 18% e hinchada al 12% mientras está pausado. Los efectos y sonidos de botones mantienen el volumen elegido. Al reanudar, la mezcla vuelve con rampas breves para evitar cortes.
+- **Capturas y navegador:** capturé y revisé menú/partido a 1366 × 768 y 915 × 412, además del panel de pausa móvil. Chrome confirmó mezcla pausada [0,063; 0,72; 0,024] y mezcla reanudada [0,35; 0,72; 0,2] para música/efectos/hinchada; cero errores de ejecución.
+- **Tests y build:** 43 tests en ocho archivos pasaron; 200 partidos promediaron 5,525 goles y 39,26 remates, con cero partidos sin remates. pnpm build pasó. El renderer Three.js sigue por encima del aviso de 500 kB.
+- **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. La mezcla cambia correctamente en Chrome; falta escucharla en un teléfono para calificar mejor el sonido.
+- **Pendiente:** prueba en Android físico de pausa, audio, orientación, controles y FPS.
+- **Siguiente:** reducir el chunk 3D; hacer más legible el remate y revisar atajadas en movimiento; despejar área de juego móvil sin achicar controles; medir FPS en cuatro canchas en Android; escuchar los arreglos y sustituir síntesis por audio CC0 si la grabación mejora.

@@ -9,6 +9,15 @@ export interface AudioMix {
 
 const DEFAULT_MIX: AudioMix = { music: 0.35, effects: 0.72, crowd: 0.2 };
 const clampVolume = (value: number) => Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
+
+export function effectiveAudioMix(mix: AudioMix, paused: boolean): AudioMix {
+  return {
+    music: mix.music * (paused ? 0.18 : 1),
+    effects: mix.effects,
+    crowd: mix.crowd * (paused ? 0.12 : 1),
+  };
+}
+
 const MUSIC = {
   menuChords: [[146.83, 185, 220], [123.47, 146.83, 185], [98, 123.47, 146.83], [110, 138.59, 164.81]],
   matchChords: [[196, 246.94, 293.66], [146.83, 185, 220], [164.81, 196, 246.94], [130.81, 164.81, 196]],
@@ -29,6 +38,7 @@ export class StreetAudio {
   private crowdSource: AudioBufferSourceNode | null = null;
   private musicTimer = 0;
   private enabled = false;
+  private paused = false;
   private musicStep = 0;
   private nextMusicTime = 0;
   private scene: MusicScene = 'menu';
@@ -49,6 +59,7 @@ export class StreetAudio {
     if (enabled) {
       void this.context.resume();
       this.master.gain.setTargetAtTime(0.82, this.context.currentTime, 0.08);
+      this.applyBusVolumes();
       this.startMelody();
     } else {
       this.master.gain.setTargetAtTime(0, this.context.currentTime, 0.08);
@@ -64,10 +75,21 @@ export class StreetAudio {
       crowd: clampVolume(mix.crowd ?? this.mix.crowd),
     };
     if (!this.context) return;
+    this.applyBusVolumes();
+  }
+
+  setPaused(paused: boolean) {
+    this.paused = paused;
+    this.applyBusVolumes();
+  }
+
+  private applyBusVolumes() {
+    if (!this.context) return;
     const now = this.context.currentTime;
-    this.musicBus?.gain.setTargetAtTime(this.mix.music, now, 0.05);
-    this.effectsBus?.gain.setTargetAtTime(this.mix.effects, now, 0.05);
-    this.crowdBus?.gain.setTargetAtTime(this.mix.crowd, now, 0.05);
+    const levels = effectiveAudioMix(this.mix, this.paused);
+    this.musicBus?.gain.setTargetAtTime(levels.music, now, 0.12);
+    this.effectsBus?.gain.setTargetAtTime(levels.effects, now, 0.05);
+    this.crowdBus?.gain.setTargetAtTime(levels.crowd, now, 0.18);
   }
 
   setScene(scene: MusicScene) {

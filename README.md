@@ -140,3 +140,5 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - La prueba de animaciones se hizo con Chrome headless y SwiftShader; el remate y la atajada necesitan inspección en movimiento en Android. En 915 × 412 la barrida se lee mejor que la pose del remate.
 - La entrada del menú pesa 64,43 kB (21,85 kB gzip) y el renderer diferido 524,24 kB (135,51 kB gzip); Vite aún advierte por ese chunk 3D. En Chrome headless con red 4G simulada y CPU 4×, el menú cargó en 1,06 s en escritorio y 1,42 s en móvil; iniciar el juego tardó 5,01 s y 3,47 s respectivamente. No son mediciones de Android físico.
 - No hay una carpeta `assets-cc0`; la música y los efectos son síntesis generada en el navegador. Comprobé que AudioContext queda activo en Chrome headless, pero falta escucharlo con auriculares y parlantes de Android.
+
+- Ronda 10: al pausar se conserva la música del partido con música al 18% e hinchada al 12%; efectos/interfaz conservan su volumen y al reanudar la mezcla vuelve suavemente. Chrome validó los buses en pausa y reanudación; el audio queda pendiente de escucha física.
