@@ -121,3 +121,14 @@
 - **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. La mezcla cambia correctamente en Chrome; falta escucharla en un teléfono para calificar mejor el sonido.
 - **Pendiente:** prueba en Android físico de pausa, audio, orientación, controles y FPS.
 - **Siguiente:** reducir el chunk 3D; hacer más legible el remate y revisar atajadas en movimiento; despejar área de juego móvil sin achicar controles; medir FPS en cuatro canchas en Android; escuchar los arreglos y sustituir síntesis por audio CC0 si la grabación mejora.
+
+## Ronda 11 · controles móviles en columna
+
+- **Hora:** 2026-09-26, 15:50–16:45 ART.
+- **Hallazgo:** la cuadrícula de cuatro columnas ocupaba unos 360 px y tapaba la zona derecha del campo en 915 × 412.
+- **Cambios:** entre 821 y 1024 px en horizontal, pasé Pase, Alto, Barrida, Truco y Sprint a dos columnas de botones de 86 × 86 px; Remate ocupa la tercera columna con el mismo blanco táctil de 86 px de ancho. Bajé un poco la opacidad de los botones para dejar leer la acción detrás. Desplacé el tutorial arriba y a la izquierda para evitar los botones. La regla no cambia el layout de escritorio ni el duelo local en teléfonos chicos.
+- **Revisión visual y controles:** en Chrome con viewport 915 × 412 medí botones de 86 × 86 y grupo de 268 px de ancho, confirmé que Remate queda fuera del borde del campo y no hubo errores JavaScript. Vi el partido completo con el tutorial activo; la nueva columna despeja parte del campo que antes quedaba debajo de controles. La captura se revisó en navegador, pero no se pudo guardar en outputs/captures: la sincronización del navegador se detuvo al cambiar de viewport. Para 1366 × 768 usé la captura de ronda 10; esta regla CSS no aplica a esa resolución.
+- **Tests y build:** 43 tests en ocho archivos pasaron al repetir la ejecución con la carpeta temporal en el workspace; el primer intento chocó con permisos al crear una carpeta bajo %TEMP%. Simulación de 200 partidos: 5,525 goles, 39,26 remates y cero partidos sin remates. pnpm build pasó, con el aviso habitual del renderer Three.js de 525,32 kB (135,90 kB gzip).
+- **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. Mantengo las notas: el control y la lectura móvil mejoran, pero falta prueba táctil física y revisar el resto de las resoluciones.
+- **Pendiente:** guardar captura móvil con el flujo de navegador recuperado; probar 60 FPS y tacto real en Android.
+- **Siguiente:** reducir el chunk 3D; mejorar gesto de remate y atajada; despejar campo en 915 × 412 sin reducir blancos táctiles; medir FPS en Android de gama media; escuchar mezcla y grabar audio CC0 solo si mejora la síntesis.

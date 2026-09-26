@@ -234,3 +234,18 @@ Antes: [partido 1366 × 768](outputs/captures/round-8-after/match-1366x768.png) 
 ### Capturas comparables de ronda 10
 
 Antes: [pausa móvil ronda 9 no capturada; partido 915 × 412](outputs/captures/round-9-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png), [pausa 915 × 412](outputs/captures/round-10-after/pause-915x412.png), [menú 1366 × 768](outputs/captures/round-10-after/menu-1366x768.png) y [menú 915 × 412](outputs/captures/round-10-after/menu-915x412.png).
+## Ronda 11 · controles móviles en columna
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Sin cambios en inicio. El tutorial evita el nuevo grupo táctil. |
+| Sensación al jugar | 9/10 | Botones de acción conservan 86 × 86 px y ocupan menos ancho total en móvil horizontal. |
+| Gráficos | 8/10 | En 915 × 412 el campo queda menos cubierto. El estilo y la escena no cambian. |
+| Sonido | 6/10 | Sin cambios; sigue sin escucha en Android. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 11:** 40/50. La medición de Chrome a 915 × 412 confirmó 86 × 86 px por botón y un grupo de 268 px de ancho. La cuadrícula dejó visible más borde derecho del campo. La regla no aplica a 1366 × 768. Revisé el tutorial, pero la captura móvil no se guardó: el navegador se desconectó al cambiar la resolución. 43/43 tests y build pasaron; en 200 partidos, 5,525 goles, 39,26 remates y cero encuentros sin remates.
+
+### Capturas comparables de ronda 11
+
+Captura de escritorio (CSS de esta ronda no aplica): [partido 1366 × 768 de ronda 10](outputs/captures/round-10-after/match-1366x768.png). Captura móvil previa: [partido 915 × 412 de ronda 10](outputs/captures/round-10-after/match-915x412.png). La distribución nueva se vio en el navegador en 915 × 412; no quedó un archivo de esa imagen.

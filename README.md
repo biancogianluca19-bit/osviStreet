@@ -142,3 +142,5 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - No hay una carpeta `assets-cc0`; la música y los efectos son síntesis generada en el navegador. Comprobé que AudioContext queda activo en Chrome headless, pero falta escucharlo con auriculares y parlantes de Android.
 
 - Ronda 10: al pausar se conserva la música del partido con música al 18% e hinchada al 12%; efectos/interfaz conservan su volumen y al reanudar la mezcla vuelve suavemente. Chrome validó los buses en pausa y reanudación; el audio queda pendiente de escucha física.
+
+- Ronda 11: en 821–1024 px apaisados reorganicé los controles en tres columnas. Pase, pase alto, barrida, truco y sprint mantienen botones de 86 × 86 px; Remate mantiene 86 px de ancho. Chrome confirmó medidas y legibilidad en 915 × 412. La captura nueva no quedó guardada por una interrupción del navegador.
