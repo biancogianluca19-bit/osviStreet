@@ -116,6 +116,7 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 4 · 2026-09-26 | 8 | 8 | 7 | 5 | 8 | 36/50 |
 | Ronda 5 · 2026-09-26 | 9 | 8 | 7 | 5 | 8 | 37/50 |
 | Ronda 6 · 2026-09-26 | 9 | 8 | 7 | 6 | 8 | 38/50 |
+| Ronda 7 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -167,3 +168,19 @@ Antes: [menú móvil](outputs/captures/round-4-after/menu-915x412.png) y [partid
 ### Capturas comparables de ronda 6
 
 Antes: [menú móvil](outputs/captures/round-5-after/menu-915x412.png) y [partido móvil](outputs/captures/round-5-after/match-915x412.png). Después: [menú 1366 × 768](outputs/captures/round-6-after/menu-1366x768.png), [partido 1366 × 768](outputs/captures/round-6-after/match-1366x768.png), [menú 915 × 412](outputs/captures/round-6-after/menu-915x412.png) y [partido 915 × 412](outputs/captures/round-6-after/match-915x412.png).
+
+## Ronda 7 · poses de acción y respuesta visual
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | El menú y el inicio rápido se mantienen; esta ronda no cambió el flujo inicial. |
+| Sensación al jugar | 9/10 | Rematar, pasar, barrerse, atajar y recibir una falta activan poses articuladas. La barrida baja al jugador y lo extiende sobre el piso; un remate lleva el cuerpo y la pierna de apoyo hacia adelante. |
+| Gráficos | 8/10 | Las acciones suman polvo de barrida, destellos de golpe y ráfagas de color. La celebración alterna saltos y patadas; el arquero se lanza hacia el balón. Los modelos siguen siendo geométricos y el render aún no usa posprocesado. |
+| Sonido | 6/10 | Sin cambios en la mezcla ni en los efectos sintetizados. |
+| Progresión | 8/10 | Sin cambios en tienda, monedas, retos ni logros. |
+
+**Puntuación de ronda 7:** 40/50. En Chrome headless a 915 × 412, accioné remate y barrida: ambos mostraron el aviso correspondiente, el navegador registró cero errores y los botones midieron 78 × 78 px (remate 87 × 124 px). La barrida se distingue en una imagen fija. La pierna del remate y las poses de atajada/falta son difíciles de juzgar en capturas pequeñas, así que necesitan revisión en movimiento. Ejecuté `pnpm test` (38/38) y `pnpm build`; la simulación mantuvo 5,525 goles, 39,26 remates por partido y cero partidos sin remates. El test visual usó Chrome con SwiftShader y eventos de mouse; no equivale a una pantalla táctil ni a un teléfono Android.
+
+### Capturas comparables de ronda 7
+
+Antes: [partido 1366 × 768](outputs/captures/round-6-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-6-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-7-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-7-after/match-915x412.png), [remate en 915 × 412](outputs/captures/round-7-after/action-kick-915x412.png) y [barrida en 915 × 412](outputs/captures/round-7-after/action-slide-915x412.png). Menú de escritorio y móvil en `outputs/captures/round-7-after/`.

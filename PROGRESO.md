@@ -75,3 +75,14 @@
 - **Tests y build:** `pnpm build` pasó; Vite mantiene el aviso de chunk por el renderer diferido de 524,24 kB (135,51 kB gzip). Los 38 tests pasaron en seis archivos. La simulación cubrió 200 partidos: 5,525 goles, 39,26 remates por partido, 35,025 atajadas y cero partidos sin remates.
 - **Puntuación:** 38/50 — primeros 30 s 9, sensación 8, gráficos 7, sonido 6, progresión 8.
 - **Siguiente:** incorporar grabaciones CC0 de hinchada y pelota si se consiguen, verificar mezcla en auriculares/parlantes Android, medir FPS y entrada en un teléfono real, bajar el peso del renderer y completar animaciones de patear/atajar/festejar.
+
+## Ronda 7 · poses de acción
+
+- **Hora:** 2026-09-26, 14:48 ART.
+- **Cambios:** remates, pases, barridas, atajadas y faltas disparan poses articuladas con duración y fuerza propias. Se reforzó el seguimiento de la pierna y el torso al patear; las barridas inclinan y bajan el cuerpo; el arquero se lanza; una falta produce una reacción. Añadí polvo para la barrida y ráfagas de equipo para pases, remates y atajadas. Las celebraciones alternan saltos y patadas.
+- **Prueba en navegador:** en Chrome headless, inicié un partido 915 × 412 y pulsé Remate y Barrida. Los dos eventos aparecieron en pantalla; no hubo errores JavaScript. Los botones midieron 78 × 78 px y el remate 87 × 124 px. Revisé también el partido en 1366 × 768.
+- **Capturas:** revisé antes y después. La captura de barrida deja clara la pose horizontal; en la captura del remate el aviso se lee, pero la pierna se distingue menos. El disparo se capturó cerca del inicio de la animación. No capturé un evento de atajada o falta por separado. Archivos en `outputs/captures/round-7-after/`.
+- **Tests y build:** `pnpm test --reporter=verbose` pasó los 38 tests de seis archivos, incluidos 200 partidos: 5,525 goles y 39,26 remates de promedio, 35,025 atajadas y cero partidos sin remates. `pnpm build` pasó. Vite sigue advirtiendo que el chunk del renderer supera 500 kB.
+- **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8.
+- **Pendiente:** verificar el toque físico, el remate y la atajada en movimiento; probar audio y rendimiento en Android. No pude verificar 60 FPS en un teléfono.
+- **Siguiente:** mejorar la lectura del remate y capturar una atajada; medir FPS/carga en Android de gama media; reducir el chunk 3D; revisar las cuatro canchas y las pantallas de menú en un teléfono; comparar y corregir la mezcla musical y los efectos con escucha real.

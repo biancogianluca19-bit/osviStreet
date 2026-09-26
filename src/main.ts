@@ -581,6 +581,25 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
       || (currentMode === 'local' && event.team === 1 && event.playerId === inputPlayers.team1)));
 
   for (const event of unseen) {
+    if (event.playerId && (event.type === 'kick' || event.type === 'special')) {
+      const power = event.type === 'special' ? 1.35 : event.text.includes('REMATE') ? 1 : 0.74;
+      renderer.animateAction(event.playerId, 'kick', 1, power);
+      const color = game.teams[event.team ?? 0].primary;
+      renderer.emitBurst(event.position, color, event.text.includes('REMATE') ? 12 : 5, 0.16);
+    } else if (event.playerId && event.type === 'tackle') {
+      renderer.animateAction(event.playerId, 'slide', 1, 1.1);
+      renderer.emitBurst(event.position, '#e6cf9a', 18, 0.12);
+    } else if (event.playerId && event.type === 'save') {
+      const keeper = game.players.find((player) => player.id === event.playerId);
+      const diveDirection = keeper
+        ? Math.sign(game.ball.position.z - keeper.position.z) || Math.sign(game.ball.velocity.z) || 1
+        : 1;
+      renderer.animateAction(event.playerId, 'save', diveDirection, 1.12);
+      renderer.emitBurst(event.position, game.teams[event.team ?? 0].primary, 18, 0.34);
+    } else if (event.playerId && event.type === 'foul') {
+      renderer.animateAction(event.playerId, 'hit', -1, 1);
+      renderer.emitBurst(event.position, '#ff7166', 10, 0.3);
+    }
     if (event.type === 'trick' && event.team === 0 && event.playerId === inputPlayers.team0) playerTricksInMatch += 1;
     if (event.type === 'kick' || event.type === 'special') {
       if (event.playerId === inputPlayers.team0 && event.team === 0) {

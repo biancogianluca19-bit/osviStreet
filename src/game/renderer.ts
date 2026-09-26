@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { FIELD, type CourtId, type Footballer, type MatchState, type TeamId } from './types';
 
+type ActorAnimation = 'kick' | 'slide' | 'save' | 'hit';
+
 type ActorView = {
   root: THREE.Group;
   pulse?: THREE.Mesh;
@@ -9,6 +11,10 @@ type ActorView = {
   arms: THREE.Group[];
   legs: THREE.Group[];
   shins: THREE.Group[];
+  animation?: ActorAnimation;
+  animationAge: number;
+  animationDirection: number;
+  animationPower: number;
 };
 
 const colorMaterial = (color: string) => new THREE.MeshToonMaterial({ color });
@@ -463,7 +469,7 @@ export class MatchRenderer {
       pulse.position.y = 0.04;
       root.add(pulse);
     }
-    return { root, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins };
+    return { root, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins, animationAge: 0, animationDirection: 1, animationPower: 1 };
   }
 
   private buildBall() {
@@ -568,22 +574,47 @@ export class MatchRenderer {
       const speed = Math.hypot(player.velocity.x, player.velocity.z);
       const run = Math.min(1, speed / 3.8);
       const celebration = player.celebration > 0 ? Math.min(1, player.celebration / 0.65) : 0;
+      const celebrationAge = Math.max(0, 1.15 - player.celebration);
       const phase = state.elapsed * 12 + Number(player.id.slice(-1)) * 1.7;
-      const keeperDive = view.keeper ? Math.min(1, speed / 2.8) : 0;
+      const animationDuration = view.animation === 'slide' ? 0.68 : view.animation === 'save' ? 0.72 : view.animation === 'hit' ? 0.38 : 0.52;
+      if (view.animation) {
+        view.animationAge += dt;
+        if (view.animationAge >= animationDuration) view.animation = undefined;
+      }
+      const actionAge = view.animationAge;
+      const actionPower = view.animationPower;
+      const kickPulse = view.animation === 'kick' ? Math.exp(-actionAge * 4.8) * actionPower : 0;
+      const slidePulse = view.animation === 'slide' ? Math.sin(Math.PI * Math.min(1, actionAge / animationDuration)) * actionPower : 0;
+      const savePulse = view.animation === 'save' ? Math.sin(Math.PI * Math.min(1, actionAge / animationDuration)) * actionPower : 0;
+      const hitPulse = view.animation === 'hit' ? Math.exp(-actionAge * 8) * actionPower : 0;
+      const keeperDive = view.keeper ? Math.max(Math.min(1, speed / 2.8), savePulse) : 0;
       view.root.rotation.y = facing + spin;
-      view.root.rotation.z = (player.trickTimer > 0 ? (player.trickId === 'elastica' ? -0.48 : player.trickId === 'taco' ? 0.35 : 0) * flourish : 0) - Math.sign(player.velocity.z || 0) * keeperDive * 0.62;
-      view.root.position.y = player.celebration > 0 ? Math.abs(Math.sin((1.2 - player.celebration) * 14)) * 0.5 : flourish * (player.trickId === 'sombrerito' ? 0.35 : 0.18) + (run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0);
-      view.torso.rotation.x = -run * 0.1 + flourish * (player.trickId === 'pecho' ? -0.35 : 0.08);
-      view.torso.rotation.z = Math.sin(phase * 0.5) * run * 0.045 + celebration * 0.18;
+      view.root.rotation.x = player.facing.z * slidePulse * 1.18 - view.animationDirection * savePulse * 1.2;
+      view.root.rotation.z = (player.trickTimer > 0 ? (player.trickId === 'elastica' ? -0.48 : player.trickId === 'taco' ? 0.35 : 0) * flourish : 0)
+        - Math.sign(player.velocity.z || 0) * keeperDive * 0.62
+        - player.facing.x * slidePulse * 1.3
+        + player.facing.x * hitPulse * 0.25;
+      const celebrationJump = celebration > 0 ? Math.max(0, Math.sin(celebrationAge * 12)) * 0.42 : 0;
+      view.root.position.x += player.facing.x * slidePulse * 0.34;
+      view.root.position.y = celebrationJump + savePulse * 0.14 - slidePulse * 0.24
+        + flourish * (player.trickId === 'sombrerito' ? 0.35 : 0.18)
+        + (run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0);
+      view.root.position.z += player.facing.z * slidePulse * 0.34 + view.animationDirection * savePulse * 0.4;
+      view.torso.rotation.x = -run * 0.1 + flourish * (player.trickId === 'pecho' ? -0.35 : 0.08) - kickPulse * 0.28 + celebration * Math.sin(celebrationAge * 8) * 0.12;
+      view.torso.rotation.z = Math.sin(phase * 0.5) * run * 0.045 + celebration * 0.18 + slidePulse * 0.2;
       for (const [index, leg] of view.legs.entries()) {
         const swing = Math.cos(phase + index * Math.PI) * run * 0.68;
-        leg.rotation.x = swing - celebration * 0.35;
-        view.shins[index]!.rotation.x = Math.max(0, -swing) * 0.85 + celebration * 0.55;
+        const leadLeg = index === 1;
+        const celebrationKick = celebration * Math.max(0, Math.sin(celebrationAge * 12 + index * Math.PI)) * 0.5;
+        const actionSwing = leadLeg ? -kickPulse * 1.92 - slidePulse * 1.62 + savePulse * 0.28 : slidePulse * 0.68 + savePulse * 0.42;
+        leg.rotation.x = swing + actionSwing - celebration * 0.2 + celebrationKick;
+        view.shins[index]!.rotation.x = Math.max(0, -swing) * 0.85 + celebration * (0.25 + celebrationKick) + kickPulse * (leadLeg ? 1.2 : 0.08) - slidePulse * (leadLeg ? 0.72 : 0);
       }
       for (const [index, arm] of view.arms.entries()) {
         const swing = Math.sin(phase + index * Math.PI) * run * 0.4;
-        arm.rotation.x = swing - celebration * 0.88 - keeperDive * 0.42;
-        arm.rotation.z = (-index * 2 + 1) * (0.08 + celebration * 0.35) - Math.sign(player.velocity.z || 0) * keeperDive * 0.65;
+        const side = -index * 2 + 1;
+        arm.rotation.x = swing - celebration * (0.96 + Math.sin(celebrationAge * 12 + index * Math.PI) * 0.18) - keeperDive * 0.42 - kickPulse * (index === 0 ? 0.54 : -0.18);
+        arm.rotation.z = side * (0.08 + celebration * 0.42 + savePulse * 1.22 + slidePulse * 0.48) - Math.sign(player.velocity.z || 0) * keeperDive * 0.65;
       }
       if (view.pulse) {
         view.pulse.visible = player.id === state.selectedPlayerId || (state.localPlayers === 2 && player.id === state.secondSelectedPlayerId);
@@ -616,6 +647,15 @@ export class MatchRenderer {
     if (this.impactRemaining === 0) this.impactPower = 0;
     this.updateParticles(dt);
     this.renderer.render(this.scene, this.camera);
+  }
+
+  animateAction(playerId: string, animation: ActorAnimation, direction = 1, power = 1) {
+    const view = this.actors.get(playerId);
+    if (!view) return;
+    view.animation = animation;
+    view.animationAge = 0;
+    view.animationDirection = direction < 0 ? -1 : 1;
+    view.animationPower = Math.max(0.65, Math.min(1.4, power));
   }
 
   celebrate(team: TeamId, color: string, position: { x: number; z: number }) {

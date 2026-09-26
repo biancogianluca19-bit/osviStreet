@@ -69,6 +69,7 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - Hay un desafío diario rotativo con progreso y premio de una sola vez, cinco récords locales y quince logros que avanzan con partidos, goles, trucos, rachas y compras.
 - Música, efectos e hinchada tienen controles de volumen separados y guardan sus valores en el dispositivo. La música original generada en Web Audio usa bajo, acordes, percusión y melodía; el menú va a 106 BPM y el partido a 126 BPM. Pase, remate, barrida, truco, pared, gol y botones tienen efectos propios.
 - Los jugadores tienen brazos y piernas articulados con ciclo de carrera; los arqueros inclinan el cuerpo al desplazarse. Los modelos procedurales usan más detalles de uniforme y cara.
+- Remates, pases, barridas, atajadas y faltas activan poses articuladas y partículas de color o polvo. Las celebraciones alternan saltos y patadas. Las capturas de la ronda 7 muestran el remate y la barrida a 915 × 412; falta revisar esas poses en un teléfono real.
 - Cuatro canchas caricaturescas: terraza al atardecer, jaula de grafitis, playa y galpón neón.
 - Estelas de pelota, partículas, cámara lenta breve, nombres de trucos, música y efectos de audio sintetizados.
 - El menú carga una cancha CSS liviana y deja Three.js para el momento de entrar a jugar. En la carga del renderer aparece el aviso PREPARANDO LA CANCHA; la escala del render se adapta según FPS.
@@ -121,6 +122,7 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - Se limitó el pixel ratio para móviles, se agregó ajuste por FPS y se liberan las geometrías al cambiar de partido o cancha.
 - El botón de sonido quedó visible y la música comienza después de la primera interacción, según la política de reproducción del navegador.
 - Ronda 6: la música usa un planificador con anticipación para sostener el pulso; se añadieron capas de golpe y transitorios a acciones y una fanfarria de gol con hinchada.
+- Ronda 7: los eventos del partido activan animaciones separadas de patear, barrerse, atajar y recibir una falta; las acciones dejan ráfagas de color o polvo. Vitest pasó 38/38 tests y la vista de Chrome a 915 × 412 confirmó los avisos de remate y barrida sin errores de ejecución.
 - Los compañeros del usuario ya reciben decisiones de IA: corren a ofrecerse, cambian de carril, buscan espacio ante marcas y presionan cuando el rival tiene la pelota.
 - Se ampliaron joysticks, botones de acción y pausa para celular y navegador. El duelo local reorganiza sus dos grupos en pantallas apaisadas angostas.
 - Los botones de pase, pase alto y pared excluyen al pasador de la recuperación durante su enfriamiento; el primer contacto ya no cancela el pase.
@@ -132,5 +134,6 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 - No se pudo instalar la APK en un teléfono o emulador desde este entorno.
 - No se midieron 60 FPS en un teléfono Android de gama media ni se probaron allí la orientación, el audio y los controles táctiles físicos.
+- La prueba de animaciones se hizo con Chrome headless y SwiftShader; el remate y la atajada necesitan inspección en movimiento en Android. En 915 × 412 la barrida se lee mejor que la pose del remate.
 - La entrada del menú pesa 64,43 kB (21,85 kB gzip) y el renderer diferido 524,24 kB (135,51 kB gzip); Vite aún advierte por ese chunk 3D. En Chrome headless con red 4G simulada y CPU 4×, el menú cargó en 1,06 s en escritorio y 1,42 s en móvil; iniciar el juego tardó 5,01 s y 3,47 s respectivamente. No son mediciones de Android físico.
 - No hay una carpeta `assets-cc0`; la música y los efectos son síntesis generada en el navegador. Comprobé que AudioContext queda activo en Chrome headless, pero falta escucharlo con auriculares y parlantes de Android.
