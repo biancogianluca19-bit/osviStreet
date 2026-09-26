@@ -71,9 +71,28 @@ Partido a 915 × 412:
 
 Menú en ambos tamaños y capturas originales están en `outputs/captures/round-1/` y `outputs/captures/round-0/`.
 
+## Ronda 2 · animación, audio y carrera
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 7/10 | La portada suma nivel, XP y monedas ganadas. El menú no explica todavía el reto del día ni qué se puede comprar con las monedas. |
+| Sensación al jugar | 7/10 | Brazos y piernas acompañan el movimiento; el arquero inclina el cuerpo al desplazarse. Pase, barrida e interfaz tienen tonos propios. No probé la mezcla con auriculares ni toqué una pantalla física. |
+| Gráficos | 6/10 | Los modelos toon ganan detalles de camiseta, cara, medias y articulaciones animadas. Se mantiene la geometría procedural sin modelos CC0, texturas ni postprocesado. |
+| Sonido | 5/10 | Música de menú y partido con frases diferentes, y controles separados para música, efectos e hinchada. El volumen se guarda en el dispositivo. Los instrumentos y efectos siguen sintetizados. |
+| Progresión | 4/10 | Cada partido entrega monedas y XP; el nivel y la barra al siguiente umbral quedan visibles. Las monedas aún no se gastan; faltan desafío diario, récord local y logros. |
+
+**Puntuación de ronda 2:** 29/50. La pantalla de menú y el partido se capturaron en ambos tamaños. En 915 × 412 la fila de nivel queda dentro del área visible; las cifras de monedas son pequeñas y necesitan una fila de progreso más legible en una próxima pasada.
+
+### Capturas comparables de ronda 2
+
+Antes: menú a 915 × 412 y partido a 1366 × 768, en [`round-1/`](outputs/captures/round-1/). Después: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [partido a 1366 × 768](outputs/captures/round-2-after/match-1366x768.png). Las otras dos vistas están junto a estas en `round-2-after/`.
+
+La corrida de 200 partidos a 30 Hz dio 7,995 goles de promedio y se descartó por cambiar el balance. `simulate.ts` volvió a 60 Hz. La referencia aceptada sigue siendo la simulación de 200 partidos a 60 Hz: 5,175 goles, 37,38 remates y cero partidos sin remates.
+
 ## Puntuaciones por ronda
 
 | Ronda | Primeros 30 s | Sensación | Gráficos | Sonido | Progresión | Total |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Base · 2026-09-25 | 5 | 4 | 5 | 3 | 3 | 20/50 |
 | Ronda 1 · 2026-09-26 | 7 | 6 | 5 | 3 | 3 | 24/50 |
+| Ronda 2 · 2026-09-26 | 7 | 7 | 6 | 5 | 4 | 29/50 |

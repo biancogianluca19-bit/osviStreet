@@ -21,3 +21,14 @@
 - **Promedio exacto:** un segundo intento aislado para imprimir la estadística no terminó. El test completo confirma el intervalo; el promedio exacto de esta ronda queda pendiente. El dato exacto anterior al cambio de IA era 5,175 goles y 37,38 remates.
 - **Puntuación:** 24/50 — primeros 30 s 7, sensación 6, gráficos 5, sonido 3, progresión 3.
 - **Siguiente:** animar articulaciones y pulir los modelos toon; separar volúmenes de música y efectos y dar sonido propio a cada acción; añadir monedas, niveles, récords, reto diario y logros.
+
+## Ronda 2 · animaciones, mezcla de audio y carrera
+
+- **Hora:** 2026-09-26, iniciada a las 02:51 ART.
+- **Cambios:** agregué brazos y piernas articulados con ciclo de carrera, postura de celebración y desplazamiento lateral del arquero; sumé detalles de camiseta, cara, medias y botines. El audio ahora separa música, efectos e hinchada, cambia la frase musical entre menú y partido, agrega sonidos de pase, barrida e interfaz, y recuerda los niveles elegidos. Cada partido otorga 40 monedas y 75 XP por victoria, o 15 monedas y 35 XP por derrota; el menú muestra saldo, nivel y barra al siguiente nivel.
+- **Capturas:** comparé las vistas de `outputs/captures/round-1/` con las cuatro de `outputs/captures/round-2-after/` en 1366 × 768 y 915 × 412. Revisé las imágenes nuevas. En 915 × 412 el menú y los botones del partido quedan dentro de la pantalla; los valores de la fila de progreso se ven pequeños.
+- **Tests y build:** `pnpm test --exclude tests/aiBalance.test.ts --reporter=verbose` pasó 31 tests en cinco archivos; `pnpm build` pasó. El bundle JS quedó en 579,98 kB y conserva la advertencia de Vite por superar 500 kB.
+- **Balance:** una repetición a 30 Hz promedió 7,995 goles y se descartó; distorsionaba el resultado. Restauré el simulador a 60 Hz. La prueba aceptada anterior a esta ronda completó 200 partidos a 60 Hz: 5,175 goles, 37,38 remates y cero encuentros sin remates. La repetición de 200 partidos a 60 Hz de esta ronda sigue en curso.
+- **Puntuación:** 29/50 — primeros 30 s 7, sensación 7, gráficos 6, sonido 5, progresión 4.
+- **Pendiente:** probar la pantalla de mezcla mediante interacción directa, confirmar sonido con auriculares y medir 60 fps en un Android de gama media. Aún faltan tienda para gastar monedas, reto diario, récord local y 15 logros.
+- **Siguiente:** convertir el saldo de monedas en desbloqueos elegibles; añadir el reto diario, récords y logros; rediseñar esa fila móvil para que nivel y saldo se lean a primera vista.

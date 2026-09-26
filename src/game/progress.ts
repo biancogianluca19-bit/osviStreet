@@ -21,6 +21,8 @@ export const REWARDS: readonly Reward[] = [
 export interface PlayerProgress {
   wins: number;
   matches: number;
+  coins: number;
+  xp: number;
   unlocked: string[];
   uniform: UniformId;
   boots: BootId;
@@ -31,16 +33,32 @@ export interface PlayerProgress {
 const COURT_IDS: readonly CourtId[] = ['court-rooftop', 'court-graffiti', 'court-beach', 'court-neon'];
 
 export function freshProgress(): PlayerProgress {
-  return { wins: 0, matches: 0, unlocked: ['court-rooftop'], uniform: 'candela', boots: 'classic', court: 'court-rooftop', tutorialComplete: false };
+  return { wins: 0, matches: 0, coins: 0, xp: 0, unlocked: ['court-rooftop'], uniform: 'candela', boots: 'classic', court: 'court-rooftop', tutorialComplete: false };
+}
+
+export function careerProgress(xp: number): { level: number; currentXp: number; neededXp: number } {
+  let remaining = Math.max(0, Math.floor(xp));
+  let level = 1;
+  let neededXp = 100;
+  while (remaining >= neededXp) {
+    remaining -= neededXp;
+    level += 1;
+    neededXp = 100 + (level - 1) * 25;
+  }
+  return { level, currentXp: remaining, neededXp };
 }
 
 export function difficultyAfterWin(difficulty: number): number {
   return Math.min(2, Math.max(0, difficulty) + 1);
 }
 
-export function recordCompletedMatch(progress: PlayerProgress, won: boolean): { progress: PlayerProgress; newUnlocks: Reward[] } {
+export function recordCompletedMatch(progress: PlayerProgress, won: boolean): { progress: PlayerProgress; newUnlocks: Reward[]; coinsEarned: number; xpEarned: number } {
   const wins = progress.wins + Number(won);
   const matches = progress.matches + 1;
+  const coinsEarned = won ? 40 : 15;
+  const xpEarned = won ? 75 : 35;
+  const coins = progress.coins + coinsEarned;
+  const xp = progress.xp + xpEarned;
   const unlocked = new Set(progress.unlocked);
   unlocked.add('court-rooftop');
   const newUnlocks: Reward[] = [];
@@ -50,7 +68,7 @@ export function recordCompletedMatch(progress: PlayerProgress, won: boolean): { 
       newUnlocks.push(reward);
     }
   }
-  return { progress: { ...progress, wins, matches, unlocked: [...unlocked] }, newUnlocks };
+  return { progress: { ...progress, wins, matches, coins, xp, unlocked: [...unlocked] }, newUnlocks, coinsEarned, xpEarned };
 }
 
 export function parseProgress(serialized: string | null): PlayerProgress {
@@ -62,6 +80,8 @@ export function parseProgress(serialized: string | null): PlayerProgress {
     return {
       wins: Math.max(0, parsed.wins!),
       matches: Math.max(0, parsed.matches!),
+      coins: Number.isFinite(parsed.coins) ? Math.max(0, Math.floor(parsed.coins!)) : 0,
+      xp: Number.isFinite(parsed.xp) ? Math.max(0, Math.floor(parsed.xp!)) : 0,
       unlocked: [...new Set([...defaults.unlocked, ...parsed.unlocked.filter((id): id is string => typeof id === 'string')])],
       uniform: parsed.uniform === 'violet' || parsed.uniform === 'mint' ? parsed.uniform : 'candela',
       boots: parsed.boots === 'neon' || parsed.boots === 'gold' ? parsed.boots : 'classic',

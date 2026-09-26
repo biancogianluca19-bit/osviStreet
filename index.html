@@ -15,7 +15,15 @@
       <div class="screen-tint"></div>
       <header class="topbar">
         <a class="brand" href="#" aria-label="osviStreet, inicio"><span class="brand-mark">O</span><span>osvi<span class="brand-accent">Street</span></span></a>
-        <button class="icon-button" id="sound-toggle" aria-label="Activar sonido" title="Sonido">♫</button>
+        <div class="audio-controls">
+          <button class="icon-button" id="sound-toggle" aria-label="Activar sonido" title="Sonido">♫</button>
+          <button class="icon-button audio-mix-toggle" id="audio-mix-toggle" aria-label="Ajustar volúmenes" aria-expanded="false" title="Volúmenes">☷</button>
+        </div>
+        <div class="audio-settings hidden" id="audio-settings" aria-label="Volumen de música, efectos e hinchada">
+          <label>♫ MÚSICA <input id="volume-music" type="range" min="0" max="100" value="35" aria-label="Volumen de música"></label>
+          <label>✦ EFECTOS <input id="volume-effects" type="range" min="0" max="100" value="72" aria-label="Volumen de efectos"></label>
+          <label>◉ HINCHADA <input id="volume-crowd" type="range" min="0" max="100" value="20" aria-label="Volumen de hinchada"></label>
+        </div>
       </header>
       <section class="intro-panel" id="intro-panel" aria-labelledby="intro-title">
         <div class="eyebrow"><span class="live-dot"></span> FÚTBOL DE ESQUINA · 5 CONTRA 5</div>
@@ -24,6 +32,7 @@
         <div class="play-row"><button class="primary-button" id="start-match"><span>PARTIDO RÁPIDO</span><span class="button-arrow">↗</span></button><label class="difficulty-picker" for="difficulty-select"><span>DIFICULTAD</span><select id="difficulty-select"><option value="0" selected>TRANQUI</option><option value="1">NORMAL</option><option value="2">PICANTE</option></select></label></div>
         <div class="mode-row"><button class="mode-button" id="start-tournament"><b>🏆 COPA DE BARRIO</b><span>8 equipos · eliminación directa</span></button><button class="mode-button" id="start-local"><b>⚡ DUELO LOCAL</b><span>2 jugadores · mismo dispositivo</span></button></div>
         <div class="locker-row"><strong id="locker-count">0 VICTORIAS · VESTUARIO</strong><label>CAMISETA<select id="uniform-select" aria-label="Equipar camiseta"></select></label><label>BOTINES<select id="boots-select" aria-label="Equipar botines"></select></label><label>CANCHA<select id="court-select" aria-label="Elegir cancha"></select></label></div>
+        <div class="career-progress" aria-label="Progreso de temporada"><strong id="career-level">NIVEL 1</strong><div class="career-track"><i id="career-fill"></i></div><span id="career-xp">0 / 100 XP</span><b id="career-coins">0 🪙</b></div>
         <p class="tournament-status hidden" id="tournament-status"></p>
         <div class="intro-meta"><span>3 MINUTOS</span><i></i><span>PRIMERO A 5</span><i></i><span>SIN OFFSIDE</span></div>
       </section>

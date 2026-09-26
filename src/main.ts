@@ -16,7 +16,7 @@ import { canUseSpecialShot } from './game/styleMeter';
 import { MatchRenderer } from './game/renderer';
 import { StreetAudio } from './game/audio';
 import { BOOT_STYLES, createQuickMatchTeams, createTournament, currentTournamentMatch, getStreetTeam, recordTournamentResult, STREET_TEAMS, teamOptions, tournamentRoundName, UNIFORM_STYLES, type TournamentState } from './game/modes';
-import { difficultyAfterWin, parseProgress, recordCompletedMatch, REWARDS, selectReward, type PlayerProgress } from './game/progress';
+import { careerProgress, difficultyAfterWin, parseProgress, recordCompletedMatch, REWARDS, selectReward, type PlayerProgress } from './game/progress';
 
 const el = <T extends HTMLElement>(id: string) => {
   const element = document.getElementById(id);
@@ -47,6 +47,11 @@ const p2Knob = el<HTMLDivElement>('joystick-knob-p2');
 const p2Actions = el<HTMLDivElement>('duo-actions');
 const p2TrickButton = el<HTMLButtonElement>('trick-button-p2');
 const soundToggle = el<HTMLButtonElement>('sound-toggle');
+const audioMixToggle = el<HTMLButtonElement>('audio-mix-toggle');
+const audioSettings = el<HTMLDivElement>('audio-settings');
+const musicVolume = el<HTMLInputElement>('volume-music');
+const effectsVolume = el<HTMLInputElement>('volume-effects');
+const crowdVolume = el<HTMLInputElement>('volume-crowd');
 const tutorialPanel = el<HTMLElement>('tutorial-panel');
 const tutorialStepLabel = el<HTMLElement>('tutorial-step');
 const tutorialTitle = el<HTMLElement>('tutorial-title');
@@ -110,6 +115,13 @@ let tournamentTieBreak = false;
 let matchProgressRecorded = false;
 let slowMotionRemaining = 0;
 const audio = new StreetAudio();
+try {
+  const savedMix = JSON.parse(localStorage.getItem('osvistreet-audio') ?? '{}') as Partial<{ music: number; effects: number; crowd: number }>;
+  audio.setVolumes(savedMix);
+} catch { /* Mix defaults are used when storage contains invalid data. */ }
+musicVolume.value = String(Math.round(audio.volumes.music * 100));
+effectsVolume.value = String(Math.round(audio.volumes.effects * 100));
+crowdVolume.value = String(Math.round(audio.volumes.crowd * 100));
 if (Capacitor.isNativePlatform()) void ScreenOrientation.lock({ orientation: 'landscape' }).catch(() => undefined);
 
 function persistProgress() {
@@ -136,6 +148,11 @@ function updateMenuProfile() {
   if (!difficultyChosen) difficultySelect.value = String(Math.min(progress.wins, 2));
   const unlockCount = progress.unlocked.length;
   el<HTMLElement>('locker-count').textContent = `${progress.wins} VICTORIAS · ${unlockCount} ${unlockCount === 1 ? 'DESBLOQUEO' : 'DESBLOQUEOS'}`;
+  const career = careerProgress(progress.xp);
+  el<HTMLElement>('career-level').textContent = `NIVEL ${career.level}`;
+  el<HTMLElement>('career-xp').textContent = `${career.currentXp} / ${career.neededXp} XP`;
+  el<HTMLElement>('career-coins').textContent = `${progress.coins} 🪙`;
+  el<HTMLElement>('career-fill').style.width = `${career.currentXp / career.neededXp * 100}%`;
   fillLockerSelect(uniformSelect, [
     { value: 'candela', label: UNIFORM_STYLES.candela.name, unlockId: 'candela' },
     { value: 'violet', label: UNIFORM_STYLES.violet.name, unlockId: 'uniform-violet' },
@@ -249,6 +266,7 @@ function clearControlState() {
 function beginMatch(mode: GameMode = currentMode) {
   clearControlState();
   currentMode = mode;
+  audio.setScene('match');
   beginnerAssist = progress.matches === 0 && mode === 'quick';
   tutorialActive = mode === 'quick' && progress.matches === 0 && !progress.tutorialComplete;
   tutorialRemaining = 20;
@@ -320,6 +338,7 @@ function pauseMatch() {
   if (!running || game.phase === 'finished') return;
   clearControlState();
   paused = true;
+  audio.setScene('menu');
   pausePanel.classList.remove('hidden');
   touchUi.classList.add('hidden');
   desktopHints.classList.add('hidden');
@@ -327,6 +346,7 @@ function pauseMatch() {
 
 function resumeMatch() {
   paused = false;
+  audio.setScene('match');
   pausePanel.classList.add('hidden');
   showMatchControls();
   lastTime = performance.now();
@@ -336,6 +356,7 @@ function exitMatch() {
   clearControlState();
   paused = false;
   running = false;
+  audio.setScene('menu');
   intro.classList.remove('hidden');
   hud.classList.add('hidden');
   pausePanel.classList.add('hidden');
@@ -391,6 +412,7 @@ function finishMatch() {
     const awarded = recordCompletedMatch(progress, currentMode === 'local' ? !tie : won);
     progress = awarded.progress;
     persistProgress();
+    resultNotes.push(`+${awarded.coinsEarned} MONEDAS · +${awarded.xpEarned} XP.`);
     if (awarded.newUnlocks.length) resultNotes.push(`Desbloqueado: ${awarded.newUnlocks.map((reward) => reward.label).join(', ')}.`);
     matchProgressRecorded = true;
   }
@@ -536,6 +558,7 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
       eventCalloutTimer = newest.type === 'tackle' ? 0.9 : 0.65;
       if (newest.type === 'bounce') audio.play('wall');
       if (newest.type === 'save') audio.play('save');
+      if (newest.type === 'tackle') audio.play('slide');
     } else if (newest.type === 'kick' || newest.type === 'special') {
       if (actionConfirmation === newest) {
         eventCallout.textContent = newest.text;
@@ -543,7 +566,7 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
         eventCallout.classList.add('show');
         eventCalloutTimer = 0.75;
       }
-      audio.play('kick');
+      audio.play(newest.text.toUpperCase().includes('PASE') ? 'pass' : 'kick');
     }
   }
   if (eventCalloutTimer <= 0) eventCallout.classList.remove('show', 'goal-callout', 'trick-callout');
@@ -663,7 +686,26 @@ soundToggle.addEventListener('click', () => {
   soundToggle.setAttribute('aria-label', enabled ? 'Silenciar sonido' : 'Activar sonido');
   soundToggle.title = enabled ? 'Silenciar sonido' : 'Activar sonido';
   soundToggle.classList.toggle('sound-on', enabled);
+  if (enabled) audio.play('ui');
 });
+audioMixToggle.addEventListener('click', () => {
+  const open = audioSettings.classList.toggle('hidden') === false;
+  audioMixToggle.setAttribute('aria-expanded', String(open));
+});
+const persistAudioMix = () => {
+  const mix = {
+    music: Number(musicVolume.value) / 100,
+    effects: Number(effectsVolume.value) / 100,
+    crowd: Number(crowdVolume.value) / 100,
+  };
+  audio.setVolumes(mix);
+  localStorage.setItem('osvistreet-audio', JSON.stringify(mix));
+};
+for (const slider of [musicVolume, effectsVolume, crowdVolume]) slider.addEventListener('input', persistAudioMix);
+document.addEventListener('pointerdown', (event) => {
+  if (!(event.target instanceof Element)) return;
+  if (event.target.closest('button') && event.target.closest('#sound-toggle') === null) audio.play('ui');
+}, { capture: true });
 
 document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button) => {
   button.addEventListener('pointerdown', (event) => {

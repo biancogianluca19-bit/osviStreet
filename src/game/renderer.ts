@@ -1,7 +1,15 @@
 import * as THREE from 'three';
 import { FIELD, type CourtId, type Footballer, type MatchState, type TeamId } from './types';
 
-type ActorView = { root: THREE.Group; pulse?: THREE.Mesh; keeper: boolean };
+type ActorView = {
+  root: THREE.Group;
+  pulse?: THREE.Mesh;
+  keeper: boolean;
+  torso: THREE.Group;
+  arms: THREE.Group[];
+  legs: THREE.Group[];
+  shins: THREE.Group[];
+};
 
 const colorMaterial = (color: string) => new THREE.MeshToonMaterial({ color });
 
@@ -357,29 +365,76 @@ export class MatchRenderer {
 
   private createActor(player: Footballer, colors: [string, string], bootColor: string): ActorView {
     const root = new THREE.Group();
-    const torso = this.outline(new THREE.CapsuleGeometry(0.3, 0.48, 3, 7), colors[0]);
-    torso.position.y = 1.06;
+    const torso = new THREE.Group();
+    torso.position.y = 0.57;
     root.add(torso);
+    const shirt = this.outline(new THREE.CapsuleGeometry(0.3, 0.48, 3, 8), colors[0]);
+    shirt.position.y = 0.49;
+    torso.add(shirt);
     const shorts = this.outline(new THREE.CylinderGeometry(0.28, 0.31, 0.29, 8), colors[1]);
-    shorts.position.y = 0.58;
+    shorts.position.y = 0.04;
     root.add(shorts);
     const head = this.outline(new THREE.SphereGeometry(0.235, 9, 7), '#f3bd82');
-    head.position.y = 1.62;
-    root.add(head);
+    head.position.y = 1.05;
+    torso.add(head);
     const hair = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.47), colorMaterial('#302638'));
-    hair.position.y = 1.69;
-    root.add(hair);
+    hair.position.y = 1.12;
+    torso.add(hair);
+    const stripe = this.outline(new THREE.CapsuleGeometry(0.045, 0.55, 2, 5), colors[1], 0.7);
+    stripe.position.set(0.12, 0.52, 0.285);
+    stripe.rotation.z = -0.08;
+    torso.add(stripe);
+    const crest = new THREE.Mesh(new THREE.CircleGeometry(0.065, 8), colorMaterial(player.team === 0 ? bootColor : '#fff1d2'));
+    crest.position.set(-0.16, 0.59, 0.295);
+    torso.add(crest);
+    const eyeMaterial = colorMaterial('#312638');
     for (const side of [-1, 1]) {
-      const arm = this.outline(new THREE.CapsuleGeometry(0.09, 0.32, 2, 5), colors[0]);
-      arm.position.set(side * 0.34, 1.05, 0.03);
-      arm.rotation.z = -side * 0.15;
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 5), eyeMaterial);
+      eye.position.set(side * 0.075, 1.07, 0.215);
+      torso.add(eye);
+    }
+    const smile = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.018, 0.018), eyeMaterial);
+    smile.position.set(0, 0.985, 0.221);
+    torso.add(smile);
+    const arms: THREE.Group[] = [];
+    const legs: THREE.Group[] = [];
+    const shins: THREE.Group[] = [];
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Group();
+      arm.position.set(side * 0.31, 1.34, 0.015);
+      const sleeve = this.outline(new THREE.CapsuleGeometry(0.095, 0.22, 2, 6), colors[0]);
+      sleeve.position.y = -0.15;
+      arm.add(sleeve);
+      const forearm = this.outline(new THREE.CapsuleGeometry(0.068, 0.2, 2, 6), '#f3bd82');
+      forearm.position.y = -0.4;
+      arm.add(forearm);
+      const wristBand = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.07, 7), colorMaterial(colors[1]));
+      wristBand.position.y = -0.3;
+      arm.add(wristBand);
       root.add(arm);
-      const leg = this.outline(new THREE.CapsuleGeometry(0.115, 0.36, 2, 5), '#312b48');
-      leg.position.set(side * 0.14, 0.22, 0);
+      arms.push(arm);
+
+      const leg = new THREE.Group();
+      leg.position.set(side * 0.14, 0.51, 0);
+      const thigh = this.outline(new THREE.CapsuleGeometry(0.135, 0.24, 2, 6), colors[1]);
+      thigh.position.y = -0.13;
+      leg.add(thigh);
+      const shin = new THREE.Group();
+      shin.position.y = -0.27;
+      const calf = this.outline(new THREE.CapsuleGeometry(0.105, 0.27, 2, 6), '#34304a');
+      calf.position.y = -0.15;
+      shin.add(calf);
+      const sockStripe = new THREE.Mesh(new THREE.CylinderGeometry(0.107, 0.107, 0.07, 7), colorMaterial('#fff1d2'));
+      sockStripe.position.y = -0.08;
+      shin.add(sockStripe);
+      const shoe = this.outline(new THREE.SphereGeometry(0.16, 8, 6), player.team === 0 ? bootColor : '#fff1d2');
+      shoe.scale.set(1, 0.55, 1.3);
+      shoe.position.set(0, -0.34, 0.075);
+      shin.add(shoe);
+      leg.add(shin);
       root.add(leg);
-      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.28), colorMaterial(player.team === 0 ? bootColor : '#fff1d2'));
-      shoe.position.set(side * 0.14, 0.075, 0.075);
-      root.add(shoe);
+      legs.push(leg);
+      shins.push(shin);
     }
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(player.role === 'keeper' ? 0.66 : 0.53, 12), new THREE.MeshBasicMaterial({ color: '#172335', transparent: true, opacity: 0.18 }));
     shadow.rotation.x = -Math.PI / 2;
@@ -388,11 +443,11 @@ export class MatchRenderer {
     let pulse: THREE.Mesh | undefined;
     if (player.role === 'keeper') {
       const cap = this.outline(new THREE.SphereGeometry(0.31, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.54), colors[1]);
-      cap.position.y = 1.76;
-      root.add(cap);
+      cap.position.y = 1.25;
+      torso.add(cap);
       const gloves = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), colorMaterial('#fff3c4'));
       gloves.position.set(0.36, 0.9, 0.06);
-      root.add(gloves);
+      torso.add(gloves);
     }
     if (player.id === 't0-p1' || player.id === 't1-p1') {
       pulse = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.045, 4, 24), new THREE.MeshBasicMaterial({ color: '#fff18b' }));
@@ -400,7 +455,7 @@ export class MatchRenderer {
       pulse.position.y = 0.04;
       root.add(pulse);
     }
-    return { root, pulse, keeper: player.role === 'keeper' };
+    return { root, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins };
   }
 
   private buildBall() {
@@ -502,10 +557,26 @@ export class MatchRenderer {
       const trickProgress = player.trickTimer > 0 ? 1 - player.trickTimer / 0.78 : 0;
       const flourish = player.trickTimer > 0 ? Math.sin(Math.PI * trickProgress) : 0;
       const spin = player.trickTimer > 0 && player.trickId === 'rueda' ? trickProgress * Math.PI * 2 : 0;
+      const speed = Math.hypot(player.velocity.x, player.velocity.z);
+      const run = Math.min(1, speed / 3.8);
+      const celebration = player.celebration > 0 ? Math.min(1, player.celebration / 0.65) : 0;
+      const phase = state.elapsed * 12 + Number(player.id.slice(-1)) * 1.7;
+      const keeperDive = view.keeper ? Math.min(1, speed / 2.8) : 0;
       view.root.rotation.y = facing + spin;
-      view.root.rotation.z = player.trickTimer > 0 ? (player.trickId === 'elastica' ? -0.48 : player.trickId === 'taco' ? 0.35 : 0) * flourish : 0;
-      const run = Math.hypot(player.velocity.x, player.velocity.z) > 1;
+      view.root.rotation.z = (player.trickTimer > 0 ? (player.trickId === 'elastica' ? -0.48 : player.trickId === 'taco' ? 0.35 : 0) * flourish : 0) - Math.sign(player.velocity.z || 0) * keeperDive * 0.62;
       view.root.position.y = player.celebration > 0 ? Math.abs(Math.sin((1.2 - player.celebration) * 14)) * 0.5 : flourish * (player.trickId === 'sombrerito' ? 0.35 : 0.18) + (run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0);
+      view.torso.rotation.x = -run * 0.1 + flourish * (player.trickId === 'pecho' ? -0.35 : 0.08);
+      view.torso.rotation.z = Math.sin(phase * 0.5) * run * 0.045 + celebration * 0.18;
+      for (const [index, leg] of view.legs.entries()) {
+        const swing = Math.cos(phase + index * Math.PI) * run * 0.68;
+        leg.rotation.x = swing - celebration * 0.35;
+        view.shins[index]!.rotation.x = Math.max(0, -swing) * 0.85 + celebration * 0.55;
+      }
+      for (const [index, arm] of view.arms.entries()) {
+        const swing = Math.sin(phase + index * Math.PI) * run * 0.4;
+        arm.rotation.x = swing - celebration * 0.88 - keeperDive * 0.42;
+        arm.rotation.z = (-index * 2 + 1) * (0.08 + celebration * 0.35) - Math.sign(player.velocity.z || 0) * keeperDive * 0.65;
+      }
       if (view.pulse) {
         view.pulse.visible = player.id === state.selectedPlayerId || (state.localPlayers === 2 && player.id === state.secondSelectedPlayerId);
         view.pulse.rotation.z += dt * 0.7;
