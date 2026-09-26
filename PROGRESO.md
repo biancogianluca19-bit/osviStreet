@@ -95,6 +95,19 @@
 - **Prueba en navegador:** usé Chrome headless con eventos de toque emulados. Un toque de Pase durante el saque produjo **PASE**; Barrida produjo **BARRIDA**; Pausa abrió el panel y **SALIR AL MENÚ** volvió a la portada. Cero errores JavaScript. El reinicio postgol se verificó con una prueba unitaria que contrasta sus 1,45 s con el buffer de 1,8 s; el toque de navegador se hizo durante el saque inicial de 0,65 s.
 - **Capturas:** comparé `outputs/captures/round-7-after/match-915x412.png` con las capturas nuevas. Los botones ahora resaltan y los rótulos se leen mejor; no recortan el límite inferior. Guardé menú y partido a 1366 × 768 y 915 × 412, además de Pase, Barrida y pausa.
 - **Tests y build:** `pnpm test --reporter=verbose` pasó 41 tests en siete archivos. Los 200 partidos dieron 5,525 goles, 39,26 remates y cero partidos sin remates. `pnpm build` pasó; Vite sigue avisando que el chunk Three.js supera 500 kB.
+- **Publicación:** workflow 36262293523 completó tests/build, Pages, APK y release. `debug-12-1` y Pages respondieron HTTP 200.
 - **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. La nota no sube: la respuesta táctil mejoró, pero falta comprobarla físicamente y revisar rendimiento en Android.
 - **Pendiente:** probar la APK en teléfono Android; medir 60 FPS y controles físicos; probar los ocho gestos de truco sobre un panel táctil real; escuchar la mezcla con auriculares; continuar afinando animación de remate y atajada.
 - **Siguiente:** instalar y probar en un Android de gama media; medir los FPS en las cuatro canchas; reducir el chunk 3D y mantener el partido bajo cinco segundos de carga; hacer más legible el remate y verificar atajadas en movimiento; escuchar y reemplazar la síntesis por audio CC0 donde mejore el resultado.
+
+## Ronda 9 · lectura de jugadores y pelota
+
+- **Hora:** 2026-09-26, 15:20–15:30 ART.
+- **Hallazgo:** en móvil los jugadores y el balón ocupaban pocos píxeles y se perdían contra la cancha; la imagen de escritorio mostraba mejor los detalles.
+- **Cambios:** subí 13% el tamaño visual de jugadores de campo y aumenté el contorno negro del 7% al 10%. Hice más visibles las sombras de los jugadores y subí 18% el tamaño normal de la pelota, con sombra más oscura. No cambié física ni añadí objetos al cuadro.
+- **Capturas:** comparé menús y partidos antes/después en 1366 × 768 y 915 × 412. Los jugadores se distinguen mejor, sobre todo en escritorio; en móvil los controles aún cubren una franja del borde derecho. Archivos en `outputs/captures/round-9-after/`.
+- **Revisión del navegador:** Chrome headless con SwiftShader cargó la cancha 3D en ambas resoluciones; cero errores JavaScript. Se revisó la lectura de jugadores, pelota y botones; los controles siguen dentro del viewport.
+- **Tests y build:** 41 tests en siete archivos pasaron; 200 partidos promediaron 5,525 goles y 39,26 remates, con cero partidos sin remates. `pnpm build` pasó. Vite conserva el aviso del renderer de 525,32 kB (135,90 kB gzip).
+- **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8. Mantengo la nota visual: mejoró la lectura, pero la escena sigue geométrica y el rendimiento de Android no está medido.
+- **Pendiente:** instalar en teléfono Android, medir 60 FPS y revisar controles físicos, sonido y animaciones en movimiento.
+- **Siguiente:** optimizar el chunk 3D; mejorar el gesto visual del remate y capturar una atajada; medir FPS en Android de gama media; dar más espacio al campo en móvil sin reducir los botones; escuchar los arreglos en auriculares e integrar audio CC0 donde suene mejor.

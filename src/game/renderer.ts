@@ -370,7 +370,7 @@ export class MatchRenderer {
   private outline(geometry: THREE.BufferGeometry, color: string, scale = 1) {
     const root = new THREE.Group();
     const ink = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: '#261f30', side: THREE.BackSide }));
-    ink.scale.setScalar(scale * 1.07);
+    ink.scale.setScalar(scale * 1.1);
     const fill = new THREE.Mesh(geometry, colorMaterial(color));
     fill.scale.setScalar(scale);
     root.add(ink, fill);
@@ -450,7 +450,7 @@ export class MatchRenderer {
       legs.push(leg);
       shins.push(shin);
     }
-    const shadow = new THREE.Mesh(new THREE.CircleGeometry(player.role === 'keeper' ? 0.66 : 0.53, 12), new THREE.MeshBasicMaterial({ color: '#172335', transparent: true, opacity: 0.18 }));
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(player.role === 'keeper' ? 0.66 : 0.53, 12), new THREE.MeshBasicMaterial({ color: '#172335', transparent: true, opacity: 0.22 }));
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.006;
     root.add(shadow);
@@ -567,6 +567,7 @@ export class MatchRenderer {
         this.actorsGroup.add(view.root);
       }
       view.root.position.set(player.position.x, 0, player.position.z);
+      view.root.scale.setScalar(view.keeper ? 1.08 : 1.13);
       const facing = -Math.atan2(player.facing.z, player.facing.x);
       const trickProgress = player.trickTimer > 0 ? 1 - player.trickTimer / 0.78 : 0;
       const flourish = player.trickTimer > 0 ? Math.sin(Math.PI * trickProgress) : 0;
@@ -620,7 +621,6 @@ export class MatchRenderer {
         view.pulse.visible = player.id === state.selectedPlayerId || (state.localPlayers === 2 && player.id === state.secondSelectedPlayerId);
         view.pulse.rotation.z += dt * 0.7;
       }
-      if (view.keeper) view.root.scale.set(1.08, 1.08, 1.08);
     }
     const ball = state.ball;
     this.ball.position.set(ball.position.x, ball.height, ball.position.z);
@@ -628,8 +628,8 @@ export class MatchRenderer {
     const airScale = Math.max(0.5, 1 - ball.height * 0.1);
     this.ballShadow.position.set(ball.position.x, 0.014, ball.position.z);
     this.ballShadow.scale.setScalar(airScale);
-    this.ballShadow.material.opacity = Math.max(0.06, 0.23 - ball.height * 0.05);
-    this.ball.scale.setScalar(ball.specialShot ? 1.2 : 1);
+    this.ballShadow.material.opacity = Math.max(0.08, 0.28 - ball.height * 0.06);
+    this.ball.scale.setScalar(ball.specialShot ? 1.34 : 1.18);
     this.ballStreak.visible = ball.trailTimer > 0;
     const speed = Math.hypot(ball.velocity.x, ball.velocity.z) || 1;
     this.ballStreak.children.forEach((bead, index) => {

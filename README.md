@@ -111,6 +111,7 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 ### Cambios de revisión
 
 - Ronda 8: corregí el buffer que vencía 50 ms antes de terminar el saque postgol; ahora dura 1,8 s y distingue el aviso **ESPERA EL SAQUE** de **RECUPERÁ LA PELOTA**. También amplié los controles táctiles y Pausa. Chrome confirmó pase, barrida, pausa y salida al menú con eventos táctiles emulados; 41 tests pasaron.
+- Ronda 9: agrandé 13% a los jugadores de campo, reforcé los contornos y sombras y di más tamaño a la pelota. Las capturas comparables están en `outputs/captures/round-8-after/` y `outputs/captures/round-9-after/`; el cambio visual no añadió geometría ni más trabajo por cuadro.
 - El saque alterna después de cada gol y el arquero suelta la pelota al despejar.
 - La predicción de los arqueros incluye la desaceleración del balón; las atajadas tienen un breve enfriamiento.
 - La precisión de tiro y el alcance del arquero se calibraron con 200 partidos reproducibles.

@@ -118,6 +118,7 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 6 · 2026-09-26 | 9 | 8 | 7 | 6 | 8 | 38/50 |
 | Ronda 7 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 | Ronda 8 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 9 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -201,3 +202,20 @@ Antes: [partido 1366 × 768](outputs/captures/round-6-after/match-1366x768.png) 
 ### Capturas comparables de ronda 8
 
 Antes: [partido móvil de ronda 7](outputs/captures/round-7-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-8-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-8-after/match-915x412.png), [pase en saque](outputs/captures/round-8-after/action-pass-915x412.png), [barrida táctil](outputs/captures/round-8-after/action-slide-915x412.png) y [panel de pausa](outputs/captures/round-8-after/pause-915x412.png). Los menús de ambos tamaños también están en `outputs/captures/round-8-after/`.
+
+
+## Ronda 9 · lectura de jugadores y pelota
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Sin cambios en inicio, tutorial o menú. |
+| Sensación al jugar | 9/10 | Sin cambios de física ni de entradas; la pelota destaca más en el juego. |
+| Gráficos | 8/10 | Los jugadores de campo son 13% más grandes, los contornos son más gruesos y las sombras de contacto son más visibles. La pelota creció 18% y su sombra tiene más contraste. La composición de cancha y controles permanece dentro del encuadre. |
+| Sonido | 6/10 | Sin cambios. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 9:** 40/50. La vista de escritorio muestra con más claridad la forma y posición de los jugadores; en 915 × 412 también se distinguen mejor, aunque los controles siguen cubriendo parte del borde derecho de la cancha. No subí la nota visual: el estilo sigue siendo geométrico, no hay fondos con modelos reales ni posprocesado y aún falta medir rendimiento en Android. El build y los 41 tests completos pasaron; los 200 partidos promediaron 5,525 goles y 39,26 remates, sin encuentros sin remates. Chrome headless/SwiftShader mostró la escena en ambos tamaños y registró cero errores. Vite conserva su advertencia de chunk 3D de más de 500 kB.
+
+### Capturas comparables de ronda 9
+
+Antes: [partido 1366 × 768](outputs/captures/round-8-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-8-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-9-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-9-after/match-915x412.png), [menú 1366 × 768](outputs/captures/round-9-after/menu-1366x768.png) y [menú 915 × 412](outputs/captures/round-9-after/menu-915x412.png).
