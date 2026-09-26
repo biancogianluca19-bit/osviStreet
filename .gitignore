@@ -9,3 +9,4 @@ android/local.properties
 *.jks
 *.keystore
 .DS_Store
+/work/capture-round.mjs

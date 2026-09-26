@@ -16,7 +16,7 @@ import { canUseSpecialShot } from './game/styleMeter';
 import { MatchRenderer } from './game/renderer';
 import { StreetAudio } from './game/audio';
 import { BOOT_STYLES, createQuickMatchTeams, createTournament, currentTournamentMatch, getStreetTeam, recordTournamentResult, STREET_TEAMS, teamOptions, tournamentRoundName, UNIFORM_STYLES, type TournamentState } from './game/modes';
-import { parseProgress, recordCompletedMatch, REWARDS, selectReward, type PlayerProgress } from './game/progress';
+import { difficultyAfterWin, parseProgress, recordCompletedMatch, REWARDS, selectReward, type PlayerProgress } from './game/progress';
 
 const el = <T extends HTMLElement>(id: string) => {
   const element = document.getElementById(id);
@@ -47,6 +47,12 @@ const p2Knob = el<HTMLDivElement>('joystick-knob-p2');
 const p2Actions = el<HTMLDivElement>('duo-actions');
 const p2TrickButton = el<HTMLButtonElement>('trick-button-p2');
 const soundToggle = el<HTMLButtonElement>('sound-toggle');
+const tutorialPanel = el<HTMLElement>('tutorial-panel');
+const tutorialStepLabel = el<HTMLElement>('tutorial-step');
+const tutorialTitle = el<HTMLElement>('tutorial-title');
+const tutorialInstruction = el<HTMLElement>('tutorial-instruction');
+const tutorialSeconds = el<HTMLElement>('tutorial-seconds');
+const tutorialTimeFill = el<HTMLElement>('tutorial-time-fill');
 const p2SkillReadout = el<HTMLElement>('skill-readout-p2');
 const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 let progress: PlayerProgress = parseProgress(localStorage.getItem('osvistreet-progress'));
@@ -65,6 +71,16 @@ type GameMode = 'quick' | 'tournament' | 'local';
 let currentMode: GameMode = 'quick';
 let tournament: TournamentState | null = null;
 let paused = false;
+let difficultyChosen = false;
+let beginnerAssist = false;
+let tutorialActive = false;
+let tutorialRemaining = 20;
+let tutorialStepIndex = 0;
+const tutorialSteps = [
+  { action: 'move', title: 'APRENDÉ A MOVERTE', instruction: 'Joystick o WASD: acercate a la pelota.' },
+  { action: 'pass', title: 'SOLTÁ LA PELOTA', instruction: 'Tocá PASE para buscar a un compañero.' },
+  { action: 'shoot', title: 'CERRÁ LA JUGADA', instruction: 'Apuntá al arco y tocá REMATE.' },
+] as const;
 let joystickPointer: number | null = null;
 let joystickCenter = { x: 0, y: 0 };
 let joystickMove: Vec2 = { x: 0, z: 0 };
@@ -117,6 +133,7 @@ function fillLockerSelect(select: HTMLSelectElement, options: Array<{ value: str
 }
 
 function updateMenuProfile() {
+  if (!difficultyChosen) difficultySelect.value = String(Math.min(progress.wins, 2));
   const unlockCount = progress.unlocked.length;
   el<HTMLElement>('locker-count').textContent = `${progress.wins} VICTORIAS · ${unlockCount} ${unlockCount === 1 ? 'DESBLOQUEO' : 'DESBLOQUEOS'}`;
   fillLockerSelect(uniformSelect, [
@@ -163,6 +180,44 @@ function showMatchControls() {
   desktopHints.classList.toggle('hidden', isTouch);
 }
 
+function updateTutorialPanel() {
+  const step = tutorialSteps[tutorialStepIndex];
+  if (!step) return;
+  tutorialStepLabel.textContent = `TUTORIAL · ${tutorialStepIndex + 1} / ${tutorialSteps.length}`;
+  tutorialTitle.textContent = step.title;
+  tutorialInstruction.textContent = step.instruction;
+  tutorialSeconds.textContent = String(Math.ceil(tutorialRemaining));
+  tutorialTimeFill.style.transform = `scaleX(${Math.max(0, tutorialRemaining / 20)})`;
+}
+
+function finishTutorial() {
+  if (!tutorialActive) return;
+  tutorialActive = false;
+  tutorialPanel.classList.add('hidden');
+  progress = { ...progress, tutorialComplete: true };
+  persistProgress();
+}
+
+function advanceTutorial(action: typeof tutorialSteps[number]['action']) {
+  if (!tutorialActive || tutorialSteps[tutorialStepIndex]?.action !== action) return;
+  tutorialStepIndex += 1;
+  if (tutorialStepIndex >= tutorialSteps.length) {
+    finishTutorial();
+    return;
+  }
+  updateTutorialPanel();
+}
+
+function updateTutorial(dt: number) {
+  if (!tutorialActive) return;
+  tutorialRemaining = Math.max(0, tutorialRemaining - dt);
+  if (tutorialRemaining <= 0) {
+    finishTutorial();
+    return;
+  }
+  updateTutorialPanel();
+}
+
 function clearControlState() {
   keys.clear();
   joystickPointer = null;
@@ -194,6 +249,12 @@ function clearControlState() {
 function beginMatch(mode: GameMode = currentMode) {
   clearControlState();
   currentMode = mode;
+  beginnerAssist = progress.matches === 0 && mode === 'quick';
+  tutorialActive = mode === 'quick' && progress.matches === 0 && !progress.tutorialComplete;
+  tutorialRemaining = 20;
+  tutorialStepIndex = 0;
+  tutorialPanel.classList.toggle('hidden', !tutorialActive);
+  if (tutorialActive) updateTutorialPanel();
   let homeTeam = STREET_TEAMS[0]!;
   let awayTeam = createQuickMatchTeams(Math.random())[1];
   if (mode === 'tournament') {
@@ -279,6 +340,8 @@ function exitMatch() {
   hud.classList.add('hidden');
   pausePanel.classList.add('hidden');
   resultPanel.classList.add('hidden');
+  tutorialPanel.classList.add('hidden');
+  tutorialActive = false;
   touchUi.classList.add('hidden');
   desktopHints.classList.add('hidden');
   document.documentElement.classList.remove('match-active');
@@ -288,6 +351,7 @@ function exitMatch() {
 
 function finishMatch() {
   if (!resultPanel.classList.contains('hidden')) return;
+  finishTutorial();
   touchUi.classList.add('hidden');
   desktopHints.classList.add('hidden');
   const home = game.teams[0].score;
@@ -329,6 +393,9 @@ function finishMatch() {
     persistProgress();
     if (awarded.newUnlocks.length) resultNotes.push(`Desbloqueado: ${awarded.newUnlocks.map((reward) => reward.label).join(', ')}.`);
     matchProgressRecorded = true;
+  }
+  if (currentMode === 'quick' && won && !difficultyChosen) {
+    difficultySelect.value = String(difficultyAfterWin(game.difficulty));
   }
   if (currentMode === 'quick' && !won && tie) resultNotes.push('Ganá para sumar ropa, botines y canchas nuevas.');
   el<HTMLParagraphElement>('result-score').textContent = `${home}  —  ${away}`;
@@ -387,7 +454,9 @@ function readMovement(player2 = false): Vec2 {
   const x = (keys.has(inputKeys.right) ? 1 : 0) - (keys.has(inputKeys.left) ? 1 : 0) + stick.x;
   const z = (keys.has(inputKeys.down) ? 1 : 0) - (keys.has(inputKeys.up) ? 1 : 0) + stick.z;
   const magnitude = Math.hypot(x, z);
-  return magnitude > 1 ? { x: x / magnitude, z: z / magnitude } : { x, z };
+  const movement = magnitude > 1 ? { x: x / magnitude, z: z / magnitude } : { x, z };
+  if (!player2 && magnitude > 0.18) advanceTutorial('move');
+  return movement;
 }
 
 function selectedPlayerForTeam(team: 0 | 1) {
@@ -484,6 +553,7 @@ function frame(now: number) {
   const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
   lastTime = now;
   if (running && !paused && game.phase !== 'finished') {
+    updateTutorial(dt);
     const controls: PlayerControls = {
       move: readMovement(),
       sprint: sprintHeld || keys.has('shift'),
@@ -501,7 +571,7 @@ function frame(now: number) {
     const inputPlayers = { team0: selectedPlayerForTeam(0), team1: selectedPlayerForTeam(1) };
     const gameScale = slowMotionRemaining > 0 ? 0.38 : 1;
     slowMotionRemaining = Math.max(0, slowMotionRemaining - dt);
-    game = stepMatch(game, controls, dt * gameScale, game.difficulty, false, secondControls);
+    game = stepMatch(game, controls, dt * gameScale, game.difficulty, false, secondControls, beginnerAssist && currentMode !== 'local');
     if (queuedAction && now >= queuedActionUntil) queuedAction = undefined;
     if (p2QueuedAction && now >= p2QueuedActionUntil) p2QueuedAction = undefined;
     if (slideQueued && now >= slideQueuedUntil) slideQueued = false;
@@ -529,6 +599,8 @@ function frame(now: number) {
 
 function queueAction(action: ActionId) {
   if (!running || paused) return;
+  if (action === 'pass') advanceTutorial('pass');
+  if (action === 'shoot') advanceTutorial('shoot');
   const player = game.players.find((item) => item.id === game.selectedPlayerId);
   if (action === 'slide') {
     slideQueued = true;
@@ -572,6 +644,8 @@ el<HTMLButtonElement>('next-round').addEventListener('click', () => {
   beginMatch('tournament');
 });
 el<HTMLButtonElement>('result-menu').addEventListener('click', exitMatch);
+difficultySelect.addEventListener('change', () => { difficultyChosen = true; });
+el<HTMLButtonElement>('skip-tutorial').addEventListener('click', finishTutorial);
 
 function onLockerChange() {
   progress = selectReward(progress, uniformSelect.value);

@@ -100,22 +100,23 @@ function supportTarget(
   const index = Number(player.id.slice(-1)) || 0;
   const lane = [-4.6, -1.7, 1.7, 4.6][index] ?? 0;
   const run = Math.sin(state.elapsed * 1.18 + index * 1.9);
-  const sway = Math.sin(state.elapsed * 0.76 + index * 2.3) * 0.58;
-  const forwardRun = index % 2 === 0 ? 2.1 : 3.45;
+  const overlap = Math.sin(state.elapsed * 1.75 + index * 2.4) * 1.12;
+  const sway = Math.sin(state.elapsed * 0.76 + index * 2.3) * 1.05;
+  const forwardRun = index % 2 === 0 ? 2.9 : 4.45;
   const target = {
-    x: clamp(anchor.x + attack * (forwardRun + run * 0.72), -9.7, 9.7),
-    z: clamp(lane * 0.65 + clamp(anchor.z * 0.23, -1.3, 1.3) + sway, -5.8, 5.8),
+    x: clamp(anchor.x + attack * (forwardRun + run * 1.05 + overlap), -9.7, 9.7),
+    z: clamp(lane * 0.72 + clamp(anchor.z * 0.28, -1.6, 1.6) + sway, -5.8, 5.8),
   };
 
   const marker = nearestField(opponents, target);
-  if (marker && distance(marker.position, target) < 2.15) {
+  if (marker && distance(marker.position, target) < 2.55) {
     const openSide = target.z >= marker.position.z ? 1 : -1;
-    target.z = clamp(target.z + openSide * 1.35, -5.8, 5.8);
+    target.z = clamp(target.z + openSide * 1.8, -5.8, 5.8);
   }
   const nearbyTeammate = nearestField(teammates.filter((candidate) => candidate.id !== player.id), target);
   if (nearbyTeammate && distance(nearbyTeammate.position, target) < 1.7) {
     const openSide = target.z >= nearbyTeammate.position.z ? 1 : -1;
-    target.z = clamp(target.z + openSide * 0.85, -5.8, 5.8);
+    target.z = clamp(target.z + openSide * 1.15, -5.8, 5.8);
   }
   return target;
 }

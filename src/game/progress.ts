@@ -25,12 +25,17 @@ export interface PlayerProgress {
   uniform: UniformId;
   boots: BootId;
   court: CourtId;
+  tutorialComplete: boolean;
 }
 
 const COURT_IDS: readonly CourtId[] = ['court-rooftop', 'court-graffiti', 'court-beach', 'court-neon'];
 
 export function freshProgress(): PlayerProgress {
-  return { wins: 0, matches: 0, unlocked: ['court-rooftop'], uniform: 'candela', boots: 'classic', court: 'court-rooftop' };
+  return { wins: 0, matches: 0, unlocked: ['court-rooftop'], uniform: 'candela', boots: 'classic', court: 'court-rooftop', tutorialComplete: false };
+}
+
+export function difficultyAfterWin(difficulty: number): number {
+  return Math.min(2, Math.max(0, difficulty) + 1);
 }
 
 export function recordCompletedMatch(progress: PlayerProgress, won: boolean): { progress: PlayerProgress; newUnlocks: Reward[] } {
@@ -61,6 +66,7 @@ export function parseProgress(serialized: string | null): PlayerProgress {
       uniform: parsed.uniform === 'violet' || parsed.uniform === 'mint' ? parsed.uniform : 'candela',
       boots: parsed.boots === 'neon' || parsed.boots === 'gold' ? parsed.boots : 'classic',
       court: typeof parsed.court === 'string' && COURT_IDS.includes(parsed.court as CourtId) && parsed.unlocked.includes(parsed.court) ? parsed.court as CourtId : 'court-rooftop',
+      tutorialComplete: parsed.tutorialComplete === true,
     };
   } catch {
     return freshProgress();

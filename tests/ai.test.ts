@@ -29,6 +29,31 @@ describe('Fase 3: decisiones de IA', () => {
     }
   });
 
+  it('la primera partida asiste al jugador quieto mientras sus compañeros suben líneas', () => {
+    const state = createMatch({ seed: 28, difficulty: 0 });
+    state.phase = 'playing';
+    state.ball.ownerId = 't0-p1';
+    const carrier = state.players.find((player) => player.id === 't0-p1')!;
+    const idle = { move: { x: 0, z: 0 }, sprint: false, slide: false };
+
+    for (let frame = 0; frame < 8; frame++) stepMatch(state, idle, 1 / 60, 0, false, undefined, true);
+
+    expect(carrier.velocity.x).toBeGreaterThan(0.02);
+    const easyChaser = createTeamAiControls(state, 1, 0).get('t1-p0')!;
+    const normalChaser = createTeamAiControls(state, 1, 1).get('t1-p0')!;
+    expect(Math.hypot(normalChaser.move.x, normalChaser.move.z)).toBeGreaterThan(Math.hypot(easyChaser.move.x, easyChaser.move.z));
+  });
+
+  it('da una primera victoria a quien todavía no conoce los controles', () => {
+    const state = createMatch({ seed: 2026, difficulty: 0 });
+    const idle = { move: { x: 0, z: 0 }, sprint: false, slide: false };
+    for (let frame = 0; frame < 10_920 && state.phase !== 'finished'; frame++) {
+      stepMatch(state, idle, 1 / 60, 0, false, undefined, true);
+    }
+    expect(state.phase).toBe('finished');
+    expect(state.teams[0].score).toBeGreaterThan(state.teams[1].score);
+  }, 30_000);
+
   it('también activa a los compañeros de ambos jugadores en el duelo local', () => {
     const state = createMatch({ seed: 24, localPlayers: 2 });
     state.phase = 'playing';

@@ -21,7 +21,7 @@
         <div class="eyebrow"><span class="live-dot"></span> FÚTBOL DE ESQUINA · 5 CONTRA 5</div>
         <h1 id="intro-title">TU BARRIO.<br><span>TUS REGLAS.</span></h1>
         <p>La jaula está abierta. Ganá el partido y hacete dueño de la cancha.</p>
-        <div class="play-row"><button class="primary-button" id="start-match"><span>PARTIDO RÁPIDO</span><span class="button-arrow">↗</span></button><label class="difficulty-picker" for="difficulty-select"><span>DIFICULTAD</span><select id="difficulty-select"><option value="0">TRANQUI</option><option value="1" selected>NORMAL</option><option value="2">PICANTE</option></select></label></div>
+        <div class="play-row"><button class="primary-button" id="start-match"><span>PARTIDO RÁPIDO</span><span class="button-arrow">↗</span></button><label class="difficulty-picker" for="difficulty-select"><span>DIFICULTAD</span><select id="difficulty-select"><option value="0" selected>TRANQUI</option><option value="1">NORMAL</option><option value="2">PICANTE</option></select></label></div>
         <div class="mode-row"><button class="mode-button" id="start-tournament"><b>🏆 COPA DE BARRIO</b><span>8 equipos · eliminación directa</span></button><button class="mode-button" id="start-local"><b>⚡ DUELO LOCAL</b><span>2 jugadores · mismo dispositivo</span></button></div>
         <div class="locker-row"><strong id="locker-count">0 VICTORIAS · VESTUARIO</strong><label>CAMISETA<select id="uniform-select" aria-label="Equipar camiseta"></select></label><label>BOTINES<select id="boots-select" aria-label="Equipar botines"></select></label><label>CANCHA<select id="court-select" aria-label="Elegir cancha"></select></label></div>
         <p class="tournament-status hidden" id="tournament-status"></p>
@@ -35,6 +35,11 @@
         <div class="skill-readout" id="skill-readout"><span>ESTILO</span><div class="skill-meter"><i id="skill-meter-fill"></i></div><b id="skill-meter-label">0%</b></div>
         <div class="skill-readout second-skill-readout hidden" id="skill-readout-p2"><span>ESTILO P2</span><div class="skill-meter"><i id="skill-meter-fill-p2"></i></div><b id="skill-meter-label-p2">0%</b></div>
       </section>
+      <aside class="tutorial-panel hidden" id="tutorial-panel" aria-label="Tutorial de 20 segundos">
+        <div class="tutorial-copy"><span id="tutorial-step">1 / 3 · MOVERTE</span><strong id="tutorial-title">APRENDÉ A MOVERTE</strong><p id="tutorial-instruction">Joystick o WASD: acercate a la pelota.</p></div>
+        <div class="tutorial-timer"><strong id="tutorial-seconds">20</strong><span>S</span><i><b id="tutorial-time-fill"></b></i></div>
+        <button class="tutorial-skip" id="skip-tutorial" aria-label="Omitir tutorial">OMITIR</button>
+      </aside>
       <div class="event-callout" id="event-callout" aria-live="polite"></div>
       <section class="touch-ui hidden" id="touch-ui" aria-label="Controles del partido">
         <div class="joy-base" id="joystick" aria-label="Joystick de movimiento"><div class="joy-ring"></div><div class="joy-knob" id="joystick-knob"></div></div>
@@ -62,7 +67,7 @@
       </div></div>
       <div class="desktop-hints hidden" id="desktop-hints"><span><kbd>W A S D</kbd> MOVER</span><span><kbd>J</kbd> PASE</span><span><kbd>K</kbd> PASE ALTO</span><span><kbd>ESPACIO</kbd> REMATE</span><span><kbd>T</kbd> TRUCO</span><span><kbd>SHIFT</kbd> SPRINT</span><span class="p2-hints hidden"><kbd>← ↑ → ↓</kbd> MOVER · <kbd>1–5</kbd> ACCIONES · <kbd>0</kbd> SPRINT P2</span></div>
       <section class="pause-panel hidden" id="pause-panel" aria-label="Partido pausado"><span class="eyebrow">RESPIRÁ UN SEGUNDO</span><h2>PARTIDO PAUSADO</h2><button class="primary-button" id="resume-match">VOLVER A JUGAR</button><button class="text-button" id="quit-match">SALIR AL MENÚ</button></section>
-      <section class="result-panel hidden" id="result-panel" aria-live="polite"><span class="eyebrow">PARTIDO TERMINADO</span><h2 id="result-title">¡GANASTE LA JAULA!</h2><p id="result-score">0 — 0</p><small class="result-note" id="result-note"></small><button class="primary-button hidden" id="next-round">SIGUIENTE RONDA</button><button class="primary-button" id="replay-match">REVANCHA</button><button class="text-button" id="result-menu">VOLVER AL MENÚ</button></section>
+      <section class="result-panel hidden" id="result-panel" aria-live="polite"><span class="eyebrow">PARTIDO TERMINADO</span><h2 id="result-title">¡GANASTE LA JAULA!</h2><p id="result-score">0 — 0</p><small class="result-note" id="result-note"></small><button class="primary-button hidden" id="next-round">SIGUIENTE RONDA</button><button class="primary-button" id="replay-match">OTRA MÁS</button><button class="text-button" id="result-menu">VOLVER AL MENÚ</button></section>
       <aside class="rotate-screen"><div class="rotate-icon">▱</div><strong>GIRÁ EL CELULAR</strong><span>osviStreet se juega en horizontal.</span></aside>
       <div class="corner-label"><span>EDICIÓN DE BARRIO</span><span>ARCADE · 01</span></div>
     </div>

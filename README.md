@@ -41,7 +41,7 @@ En Windows, usá `gradlew.bat assembleDebug` dentro de `android`.
 
 ## Controles
 
-En celular, girá el dispositivo a horizontal. El joystick izquierdo mueve al jugador; los botones grandes de la derecha hacen pase, pase alto, remate, barrida, truco y sprint. En navegador también podés usar el joystick y los botones con mouse, o mover al jugador con el teclado. Tocá **Truco** para hacer una bicicleta o deslizá desde ese botón para elegir otra jugada:
+En celular, girá el dispositivo a horizontal. El joystick izquierdo mueve al jugador; los botones de pase, pase alto, barrida, truco y sprint miden 78 × 78 px en 915 × 412. El remate mide 87 × 124 px. En navegador también podés usar el joystick y los botones con mouse, o mover al jugador con el teclado. Tocá **Truco** para hacer una bicicleta o deslizá desde ese botón para elegir otra jugada:
 
 | Deslizamiento | Truco |
 | --- | --- |
@@ -61,12 +61,14 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 ## Juego
 
 - Partidos rápidos de tres minutos o hasta cinco goles. La pelota rebota en los muros; no hay offside, laterales ni córners. Las faltas aparecen solo en barridas muy fuertes.
+- El primer partido rápido empieza en Tranqui con asistencia de movimiento y un tutorial jugable de 20 segundos que se puede omitir. Cada victoria sube un nivel la dificultad automática, hasta Picante; elegir una dificultad manual desactiva el ajuste automático.
 - Copa de eliminación directa entre ocho equipos ficticios. Los resultados de las rondas fijan la llave; los empates se definen a un toque de oro.
 - Duelo local para dos jugadores en la misma pantalla.
 - Ganar desbloquea uniformes, botines y canchas. El vestuario guarda los cambios en el almacenamiento local.
 - Cuatro canchas caricaturescas: terraza al atardecer, jaula de grafitis, playa y galpón neón.
 - Estelas de pelota, partículas, cámara lenta breve, nombres de trucos, música y efectos de audio sintetizados.
 - La escala de render baja o sube según los FPS observados para adaptarse al dispositivo.
+- `CALIDAD.md` registra la línea de base, los juegos de referencia y la puntuación por ronda. `PROGRESO.md` y `outputs/captures/` guardan los cambios y las capturas comparables en 1366 × 768 y 915 × 412.
 
 ## Arquitectura
 
@@ -89,9 +91,10 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 ## Verificación y revisión
 
-- `pnpm test`: suite Vitest. La simulación de 200 partidos entre IAs promedió **5,175 goles por partido** y **37,38 remates**; no hubo partidos sin remates. El margen aceptado para seis goles es ±1 por partido.
+- `pnpm test`: suite Vitest. En la ronda 1 pasó con **30 tests** en la ejecución completa; después pasaron los **9 tests de IA** con la prueba nueva de victoria en primera partida. La simulación de 200 partidos estuvo dentro del margen de **5 a 7 goles** y no tuvo partidos sin remates. El reporte no mostró el promedio exacto. El último promedio exacto registrado antes de la ronda 1 fue **5,175 goles** y **37,38 remates** por partido.
 - `pnpm build`: compila TypeScript y Vite.
 - Interfaz revisada en navegador a **915 × 412** y **480 × 320**. Pase y barrida se tocaron durante un partido; el saque aceptó el pase en espera y ambos mostraron confirmación en pantalla.
+- En la ronda 1, Playwright confirmó que los botones principales miden **78 × 78 px** a 915 × 412 y que **Omitir** cierra el tutorial. Las capturas comparables están en `outputs/captures/round-0/` y `outputs/captures/round-1/`.
 - Los ocho gestos de truco y el selector táctil se comprobaron con eventos de puntero.
 - Se revisó que saques, posesión, goles y recompensas sigan las reglas fuera del renderer y que la copa avance con los resultados guardados.
 

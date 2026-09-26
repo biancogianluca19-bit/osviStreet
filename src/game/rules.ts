@@ -286,7 +286,7 @@ function scoreGoal(state: MatchState, team: TeamId) {
   pushEvent(state, 'goal', `¡GOL DE ${state.teams[team].name.toUpperCase()}!`, team, { x: team === 0 ? 9 : -9, z: 0 }, undefined, 1.6);
 }
 
-export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 1 / 60, aiDifficulty: Difficulty = state.difficulty, aiVsAi = false, secondPlayerControls: PlayerControls = { move: { x: 0, z: 0 }, sprint: false, slide: false }): MatchState {
+export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 1 / 60, aiDifficulty: Difficulty = state.difficulty, aiVsAi = false, secondPlayerControls: PlayerControls = { move: { x: 0, z: 0 }, sprint: false, slide: false }, trainingAssist = false): MatchState {
   if (state.phase === 'finished') return state;
   const slice = Math.min(dt, 1 / 20);
   state.frame += 1;
@@ -322,14 +322,18 @@ export function stepMatch(state: MatchState, userControls: PlayerControls, dt = 
       if (closestSecond) state.secondSelectedPlayerId = closestSecond.id;
     }
   }
-  const team1Controls = createTeamAiControls(state, 1, aiDifficulty);
-  const team0Controls = createTeamAiControls(state, 0, aiDifficulty);
+  const team1Controls = createTeamAiControls(state, 1, trainingAssist ? 0 : aiDifficulty);
+  const team0Controls = createTeamAiControls(state, 0, trainingAssist ? Math.max(1, aiDifficulty) as Difficulty : aiDifficulty);
   state.players.forEach((player) => {
     const idle: PlayerControls = { move: { x: 0, z: 0 }, sprint: false, slide: false };
     const teamControls = player.team === 0 ? team0Controls : team1Controls;
     const aiControls = teamControls.get(player.id) ?? idle;
     let controls = aiControls;
-    if (!aiVsAi && player.team === 0 && player.id === state.selectedPlayerId) controls = userControls;
+    const userIsIdle = Math.hypot(userControls.move.x, userControls.move.z) < 0.08
+      && !userControls.sprint && !userControls.slide && !userControls.action && !userControls.trickId;
+    if (!aiVsAi && player.team === 0 && player.id === state.selectedPlayerId) {
+      controls = trainingAssist && userIsIdle ? aiControls : userControls;
+    }
     else if (!aiVsAi && state.localPlayers === 2 && player.team === 1 && player.id === state.secondSelectedPlayerId) controls = secondPlayerControls;
     if (controls.slide && player.role === 'field' && player.tackleCooldown <= 0) performTackle(state, player);
     movePlayer(player, controls, slice);
