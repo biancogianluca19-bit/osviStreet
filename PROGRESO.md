@@ -62,6 +62,16 @@
 - **Cambios:** saqué la importación estática del renderer. El menú conserva una cancha 2D en CSS; al iniciar una partida se importa Three.js, se muestra PREPARANDO LA CANCHA y se inicia el bucle de render cuando el WebGL está listo. Al crear el renderer reinicio el contador de FPS para no interpretar el tiempo pasado en el menú como una caída de rendimiento.
 - **Capturas:** guardé y revisé menú y partido a 1366 × 768 y 915 × 412 en outputs/captures/round-5-after/. La cancha 2D no recorta el menú; el partido carga los jugadores 3D y los controles quedan dentro de la pantalla móvil.
 - **Medición de carga:** Chrome headless, caché fría, red 4G simulada (120 ms, 200 kB/s) y CPU 4×. El evento de carga del menú tomó 1,06 s en escritorio y 1,42 s en móvil. Desde tocar Partido hasta tener cancha 3D: 5,01 s en escritorio y 3,47 s en móvil. Chunk inicial 64,43 kB (21,85 kB gzip); renderer diferido 524,24 kB (135,51 kB gzip).
-- **Tests y build:** 37 tests en cinco archivos pasaron sin aiBalance.test.ts; pnpm build pasó. El bundle principal dejó de cruzar el umbral de 500 kB, pero el chunk 3D todavía activa ese aviso. La CI completa de esta ronda se comprobará al publicar.
+- **Tests y build:** 37 tests en cinco archivos pasaron sin aiBalance.test.ts; pnpm build pasó. La CI 36257059597 luego pasó la suite completa, APK, GitHub Pages y release `debug-9-1`.
 - **Puntuación:** 37/50 — primeros 30 s 9, sensación 8, gráficos 7, sonido 5, progresión 8.
 - **Siguiente:** reducir el tiempo del chunk 3D para iniciar el partido en menos de cinco segundos en escritorio lento; probar un Android real y medir el rendimiento; retomar la calidad de audio y las animaciones.
+
+## Ronda 6 · música y efectos por capas
+
+- **Hora:** 2026-09-26, 13:59–14:13 ART.
+- **Cambios:** reemplacé el pitido melódico repetido por arreglos originales de cuatro compases: bajo, acordes, percusión y melodías separadas para el menú y el partido. El planificador mira 120 ms hacia adelante y salta al siguiente compás si la pestaña queda suspendida. Puse transitorios distintos en pase, remate, barrida, pared, truco e interfaz; el gol ahora combina una fanfarria con dos capas de hinchada. No encontré la carpeta assets-cc0 en el proyecto, así que mantuve la síntesis Web Audio.
+- **Capturas y revisión:** guardé y abrí menú y partido a 1366 × 768 y 915 × 412 en `outputs/captures/round-6-after/`. El partido 3D y todos los controles entran en móvil. Una captura inicial de escritorio tomó el fallback CSS antes del primer frame 3D; ajusté la espera y volví a capturar con 2,5 s de render.
+- **Audio en navegador:** con Chrome headless y entrada de mouse confiable, AudioContext quedó `running` en ambas resoluciones (0,89 s y 1,10 s de reloj de audio); cero errores de ejecución. Es una verificación de reproducción del navegador, no una escucha en teléfono.
+- **Tests y build:** `pnpm build` pasó; Vite mantiene el aviso de chunk por el renderer diferido de 524,24 kB (135,51 kB gzip). Los 38 tests pasaron en seis archivos. La simulación cubrió 200 partidos: 5,525 goles, 39,26 remates por partido, 35,025 atajadas y cero partidos sin remates.
+- **Puntuación:** 38/50 — primeros 30 s 9, sensación 8, gráficos 7, sonido 6, progresión 8.
+- **Siguiente:** incorporar grabaciones CC0 de hinchada y pelota si se consiguen, verificar mezcla en auriculares/parlantes Android, medir FPS y entrada en un teléfono real, bajar el peso del renderer y completar animaciones de patear/atajar/festejar.

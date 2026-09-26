@@ -115,6 +115,7 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 3 · 2026-09-26 | 8 | 7 | 6 | 5 | 8 | 34/50 |
 | Ronda 4 · 2026-09-26 | 8 | 8 | 7 | 5 | 8 | 36/50 |
 | Ronda 5 · 2026-09-26 | 9 | 8 | 7 | 5 | 8 | 37/50 |
+| Ronda 6 · 2026-09-26 | 9 | 8 | 7 | 6 | 8 | 38/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -149,3 +150,20 @@ Antes: [partido a 915 × 412](outputs/captures/round-3-after/match-915x412.png).
 ### Capturas comparables de ronda 5
 
 Antes: [menú móvil](outputs/captures/round-4-after/menu-915x412.png) y [partido móvil](outputs/captures/round-4-after/match-915x412.png). Después: [menú 1366 × 768](outputs/captures/round-5-after/menu-1366x768.png), [partido 1366 × 768](outputs/captures/round-5-after/match-1366x768.png), [menú 915 × 412](outputs/captures/round-5-after/menu-915x412.png) y [partido 915 × 412](outputs/captures/round-5-after/match-915x412.png).
+
+
+## Ronda 6 · música y efectos por capas
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | El menú y la entrada liviana del juego no cambiaron esta ronda. |
+| Sensación al jugar | 8/10 | Pase, remate, barrida, truco, pared y botón de interfaz ahora tienen transitorios y tonos distintos. La secuencia musical usa un planificador con anticipación de 120 ms para evitar el ritmo irregular de un `setInterval` musical. |
+| Gráficos | 7/10 | Sin cambios visuales. Revisé el menú y el partido en ambas resoluciones después de la mezcla nueva; los controles siguen completos en 915 × 412. |
+| Sonido | 6/10 | Menú y partido tienen arreglos de cuatro compases distintos, con bajo, acordes, percusión y melodía. Los goles suman fanfarria y dos capas de hinchada. Sigue siendo audio sintetizado. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 6:** 38/50. Con Chrome headless, el contexto de audio quedó en estado `running` en 1366 × 768 y 915 × 412; no aparecieron errores de ejecución y el renderer mostró la cancha 3D. `pnpm build` pasó y los 38 tests pasaron, incluida la simulación de 200 partidos: promedio de 5,525 goles, 39,26 remates y cero partidos sin remates. Vite sigue avisando que el chunk diferido de Three.js supera 500 kB. El navegador usó SwiftShader; esto no verifica audio físico ni 60 FPS en Android.
+
+### Capturas comparables de ronda 6
+
+Antes: [menú móvil](outputs/captures/round-5-after/menu-915x412.png) y [partido móvil](outputs/captures/round-5-after/match-915x412.png). Después: [menú 1366 × 768](outputs/captures/round-6-after/menu-1366x768.png), [partido 1366 × 768](outputs/captures/round-6-after/match-1366x768.png), [menú 915 × 412](outputs/captures/round-6-after/menu-915x412.png) y [partido 915 × 412](outputs/captures/round-6-after/match-915x412.png).

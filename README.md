@@ -67,7 +67,7 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - El vestuario vende siete camisetas, pares de botines y canchas entre 35 y 180 monedas. Elegir un artículo lo compra, lo equipa y conserva la selección en el almacenamiento local.
 - Cada resultado suma monedas y XP; las victorias entregan 40 monedas y 75 XP, y las derrotas 15 monedas y 35 XP. La portada muestra nivel, barra de XP, saldo y progreso hacia el próximo artículo.
 - Hay un desafío diario rotativo con progreso y premio de una sola vez, cinco récords locales y quince logros que avanzan con partidos, goles, trucos, rachas y compras.
-- Música, efectos e hinchada tienen controles de volumen separados y guardan sus valores en el dispositivo. El menú y el partido usan frases musicales distintas; pase, barrida y botones tienen efectos propios.
+- Música, efectos e hinchada tienen controles de volumen separados y guardan sus valores en el dispositivo. La música original generada en Web Audio usa bajo, acordes, percusión y melodía; el menú va a 106 BPM y el partido a 126 BPM. Pase, remate, barrida, truco, pared, gol y botones tienen efectos propios.
 - Los jugadores tienen brazos y piernas articulados con ciclo de carrera; los arqueros inclinan el cuerpo al desplazarse. Los modelos procedurales usan más detalles de uniforme y cara.
 - Cuatro canchas caricaturescas: terraza al atardecer, jaula de grafitis, playa y galpón neón.
 - Estelas de pelota, partículas, cámara lenta breve, nombres de trucos, música y efectos de audio sintetizados.
@@ -120,6 +120,7 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - Los rótulos de gol y truco se limpian al iniciar otro partido y al cambiar el tipo de evento.
 - Se limitó el pixel ratio para móviles, se agregó ajuste por FPS y se liberan las geometrías al cambiar de partido o cancha.
 - El botón de sonido quedó visible y la música comienza después de la primera interacción, según la política de reproducción del navegador.
+- Ronda 6: la música usa un planificador con anticipación para sostener el pulso; se añadieron capas de golpe y transitorios a acciones y una fanfarria de gol con hinchada.
 - Los compañeros del usuario ya reciben decisiones de IA: corren a ofrecerse, cambian de carril, buscan espacio ante marcas y presionan cuando el rival tiene la pelota.
 - Se ampliaron joysticks, botones de acción y pausa para celular y navegador. El duelo local reorganiza sus dos grupos en pantallas apaisadas angostas.
 - Los botones de pase, pase alto y pared excluyen al pasador de la recuperación durante su enfriamiento; el primer contacto ya no cancela el pase.
@@ -132,3 +133,4 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - No se pudo instalar la APK en un teléfono o emulador desde este entorno.
 - No se midieron 60 FPS en un teléfono Android de gama media ni se probaron allí la orientación, el audio y los controles táctiles físicos.
 - La entrada del menú pesa 64,43 kB (21,85 kB gzip) y el renderer diferido 524,24 kB (135,51 kB gzip); Vite aún advierte por ese chunk 3D. En Chrome headless con red 4G simulada y CPU 4×, el menú cargó en 1,06 s en escritorio y 1,42 s en móvil; iniciar el juego tardó 5,01 s y 3,47 s respectivamente. No son mediciones de Android físico.
+- No hay una carpeta `assets-cc0`; la música y los efectos son síntesis generada en el navegador. Comprobé que AudioContext queda activo en Chrome headless, pero falta escucharlo con auriculares y parlantes de Android.
