@@ -36,6 +36,7 @@ export interface Ball {
   velocity: Vec2;
   verticalVelocity: number;
   ownerId: string | null;
+  lastKickerId: string | null;
   lastTouch: TeamId | null;
   wallBounces: number;
   trailTimer: number;

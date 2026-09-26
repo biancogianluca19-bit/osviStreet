@@ -52,7 +52,7 @@ export function createMatch(options: MatchOptions = {}): MatchState {
   }
   const ball: Ball = {
     position: { x: 0, z: 0 }, height: FIELD.ballRadius,
-    velocity: { x: 0, z: 0 }, verticalVelocity: 0, ownerId: 't0-p1', lastTouch: 0,
+    velocity: { x: 0, z: 0 }, verticalVelocity: 0, ownerId: 't0-p1', lastKickerId: null, lastTouch: 0,
     wallBounces: 0, trailTimer: 0, specialShot: false,
   };
   const state: MatchState = {
@@ -99,6 +99,7 @@ function kick(state: MatchState, player: Footballer, requestedAction: ActionId) 
   const trickBonus = player.trickTimer > 0 && player.trickId === 'bicicleta' && shot ? 1.14 : 1;
   const speed = (action === 'wallpass' ? 10.2 : action === 'lob' ? 10.8 : shot ? (action === 'special' ? 19 : 18.5) : 9.3) * trickBonus;
   state.ball.ownerId = null;
+  state.ball.lastKickerId = player.id;
   state.ball.lastTouch = player.team;
   state.ball.position = {
     x: player.position.x + aim.x * 0.5,
@@ -145,6 +146,7 @@ export function performTrick(state: MatchState, playerId: string, trickId: strin
   state.skill[player.team] = addStyle(state.skill[player.team], gained);
   if (trick.id === 'sombrerito' && state.ball.ownerId === player.id) {
     state.ball.ownerId = null;
+    state.ball.lastKickerId = player.id;
     state.ball.lastTouch = player.team;
     state.ball.position = { x: player.position.x + player.facing.x * 0.72, z: player.position.z + player.facing.z * 0.72 };
     state.ball.velocity = { x: player.facing.x * 2.7, z: player.facing.z * 2.7 };
@@ -152,6 +154,7 @@ export function performTrick(state: MatchState, playerId: string, trickId: strin
     state.ball.verticalVelocity = 3;
   } else if (trick.id === 'taco' && state.ball.ownerId === player.id) {
     state.ball.ownerId = null;
+    state.ball.lastKickerId = player.id;
     state.ball.lastTouch = player.team;
     state.ball.position = { x: player.position.x - player.facing.x * 0.68, z: player.position.z - player.facing.z * 0.68 };
     state.ball.velocity = { x: -player.facing.x * 8.1, z: -player.facing.z * 8.1 };
@@ -233,7 +236,8 @@ function resolveBallPlayerContact(state: MatchState) {
   }
   if (state.ball.height > 1.2) return;
   const nearest = state.players
-    .filter((p) => p.role === 'field' || (Math.abs(p.position.x - state.ball.position.x) < 1.4))
+    .filter((p) => (p.role === 'field' || (Math.abs(p.position.x - state.ball.position.x) < 1.4))
+      && !(p.id === state.ball.lastKickerId && p.actionCooldown > 0))
     .map((p) => ({ player: p, distance: Math.hypot(p.position.x - state.ball.position.x, p.position.z - state.ball.position.z) }))
     .sort((a, b) => a.distance - b.distance)[0];
   if (nearest && nearest.distance < 0.75 && Math.hypot(state.ball.velocity.x, state.ball.velocity.z) < 11) {

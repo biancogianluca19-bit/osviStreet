@@ -78,6 +78,12 @@ let p2QueuedAction: ActionId | undefined;
 let slideQueued = false;
 let p2SlideQueued = false;
 let queuedTrick: TrickId | undefined;
+let queuedActionUntil = 0;
+let p2QueuedActionUntil = 0;
+let slideQueuedUntil = 0;
+let p2SlideQueuedUntil = 0;
+let queuedTrickUntil = 0;
+let p2QueuedTrickUntil = 0;
 let trickPointer: number | null = null;
 let trickOrigin = { x: 0, y: 0 };
 let p2QueuedTrick: TrickId | undefined;
@@ -148,8 +154,9 @@ let qualityWindowStart = lastTime;
 let qualityFrames = 0;
 let renderScale = Math.min(window.devicePixelRatio || 1, 1.5);
 const keys = new Set<string>();
-const latestEvents = new Set<number>();
+let lastShownEventId = 0;
 let eventCalloutTimer = 0;
+const ACTION_BUFFER_MS = 1_400;
 
 function showMatchControls() {
   touchUi.classList.remove('hidden');
@@ -166,10 +173,16 @@ function clearControlState() {
   p2SprintHeld = false;
   queuedAction = undefined;
   p2QueuedAction = undefined;
+  queuedActionUntil = 0;
+  p2QueuedActionUntil = 0;
   slideQueued = false;
   p2SlideQueued = false;
+  slideQueuedUntil = 0;
+  p2SlideQueuedUntil = 0;
   queuedTrick = undefined;
   p2QueuedTrick = undefined;
+  queuedTrickUntil = 0;
+  p2QueuedTrickUntil = 0;
   trickPointer = null;
   p2TrickPointer = null;
   knob.style.transform = 'translate(-50%, -50%)';
@@ -205,12 +218,18 @@ function beginMatch(mode: GameMode = currentMode) {
   matchProgressRecorded = false;
   queuedAction = undefined;
   p2QueuedAction = undefined;
+  queuedActionUntil = 0;
+  p2QueuedActionUntil = 0;
   slideQueued = false;
   p2SlideQueued = false;
+  slideQueuedUntil = 0;
+  p2SlideQueuedUntil = 0;
   queuedTrick = undefined;
   p2QueuedTrick = undefined;
+  queuedTrickUntil = 0;
+  p2QueuedTrickUntil = 0;
   slowMotionRemaining = 0;
-  latestEvents.clear();
+  lastShownEventId = game.eventId;
   eventCalloutTimer = 0;
   eventCallout.classList.remove('show', 'goal-callout', 'trick-callout');
   eventCallout.textContent = '';
@@ -371,12 +390,57 @@ function readMovement(player2 = false): Vec2 {
   return magnitude > 1 ? { x: x / magnitude, z: z / magnitude } : { x, z };
 }
 
-function showEvents(dt: number) {
+function selectedPlayerForTeam(team: 0 | 1) {
+  const owner = game.players.find((player) => player.id === game.ball.ownerId);
+  if (owner?.role === 'field' && owner.team === team) return owner.id;
+  return game.players
+    .filter((player) => player.team === team && player.role === 'field')
+    .sort((a, b) => Math.hypot(a.position.x - game.ball.position.x, a.position.z - game.ball.position.z)
+      - Math.hypot(b.position.x - game.ball.position.x, b.position.z - game.ball.position.z))[0]?.id;
+}
+
+function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1: string | undefined }) {
   eventCalloutTimer = Math.max(0, eventCalloutTimer - dt);
-  const newest = game.events.at(-1);
-  if (newest && !latestEvents.has(newest.id)) {
-    latestEvents.add(newest.id);
-    if (latestEvents.size > 16) latestEvents.clear();
+  const unseen = game.events.filter((event) => event.id > lastShownEventId);
+  lastShownEventId = game.eventId;
+  const actionConfirmation = [...unseen].reverse().find((event) =>
+    ['kick', 'special', 'tackle', 'trick'].includes(event.type)
+    && ((event.team === 0 && event.playerId === inputPlayers.team0)
+      || (currentMode === 'local' && event.team === 1 && event.playerId === inputPlayers.team1)));
+
+  for (const event of unseen) {
+    if (event.type === 'kick' || event.type === 'special') {
+      if (event.playerId === inputPlayers.team0 && event.team === 0) {
+        queuedAction = undefined;
+        queuedActionUntil = 0;
+      }
+      if (currentMode === 'local' && event.playerId === inputPlayers.team1 && event.team === 1) {
+        p2QueuedAction = undefined;
+        p2QueuedActionUntil = 0;
+      }
+    } else if (event.type === 'tackle') {
+      if (event.playerId === inputPlayers.team0 && event.team === 0) {
+        slideQueued = false;
+        slideQueuedUntil = 0;
+      }
+      if (currentMode === 'local' && event.playerId === inputPlayers.team1 && event.team === 1) {
+        p2SlideQueued = false;
+        p2SlideQueuedUntil = 0;
+      }
+    } else if (event.type === 'trick') {
+      if (event.playerId === inputPlayers.team0 && event.team === 0) {
+        queuedTrick = undefined;
+        queuedTrickUntil = 0;
+      }
+      if (currentMode === 'local' && event.playerId === inputPlayers.team1 && event.team === 1) {
+        p2QueuedTrick = undefined;
+        p2QueuedTrickUntil = 0;
+      }
+    }
+  }
+
+  const newest = unseen.find((event) => event.type === 'goal') ?? actionConfirmation ?? unseen.at(-1);
+  if (newest) {
     if (newest.type === 'goal') {
       eventCallout.textContent = newest.text;
       eventCallout.classList.remove('trick-callout');
@@ -396,14 +460,20 @@ function showEvents(dt: number) {
       renderer.emitBurst(newest.position, color, 22, 0.78);
       audio.play('trick');
       slowMotionRemaining = Math.max(slowMotionRemaining, 0.28);
-    } else if (newest.type === 'bounce' || newest.type === 'save' || newest.type === 'foul') {
+    } else if (newest.type === 'bounce' || newest.type === 'save' || newest.type === 'foul' || newest.type === 'tackle') {
       eventCallout.textContent = newest.text;
       eventCallout.classList.remove('goal-callout', 'trick-callout');
       eventCallout.classList.add('show');
-      eventCalloutTimer = 0.65;
+      eventCalloutTimer = newest.type === 'tackle' ? 0.9 : 0.65;
       if (newest.type === 'bounce') audio.play('wall');
       if (newest.type === 'save') audio.play('save');
-    } else if (newest.type === 'kick') {
+    } else if (newest.type === 'kick' || newest.type === 'special') {
+      if (actionConfirmation === newest) {
+        eventCallout.textContent = newest.text;
+        eventCallout.classList.remove('goal-callout', 'trick-callout');
+        eventCallout.classList.add('show');
+        eventCalloutTimer = 0.75;
+      }
       audio.play('kick');
     }
   }
@@ -428,17 +498,18 @@ function frame(now: number) {
       action: p2QueuedAction === 'shoot' && canUseSpecialShot(game.skill[1]) ? 'special' : p2QueuedAction,
       trickId: p2QueuedTrick,
     };
+    const inputPlayers = { team0: selectedPlayerForTeam(0), team1: selectedPlayerForTeam(1) };
     const gameScale = slowMotionRemaining > 0 ? 0.38 : 1;
     slowMotionRemaining = Math.max(0, slowMotionRemaining - dt);
     game = stepMatch(game, controls, dt * gameScale, game.difficulty, false, secondControls);
-    queuedAction = undefined;
-    p2QueuedAction = undefined;
-    slideQueued = false;
-    p2SlideQueued = false;
-    queuedTrick = undefined;
-    p2QueuedTrick = undefined;
+    if (queuedAction && now >= queuedActionUntil) queuedAction = undefined;
+    if (p2QueuedAction && now >= p2QueuedActionUntil) p2QueuedAction = undefined;
+    if (slideQueued && now >= slideQueuedUntil) slideQueued = false;
+    if (p2SlideQueued && now >= p2SlideQueuedUntil) p2SlideQueued = false;
+    if (queuedTrick && now >= queuedTrickUntil) queuedTrick = undefined;
+    if (p2QueuedTrick && now >= p2QueuedTrickUntil) p2QueuedTrick = undefined;
     updateHud();
-    showEvents(dt);
+    showEvents(dt, inputPlayers);
     if (game.phase === 'finished') finishMatch();
   }
   renderer.render(game, dt);
@@ -458,14 +529,35 @@ function frame(now: number) {
 
 function queueAction(action: ActionId) {
   if (!running || paused) return;
-  if (action === 'slide') slideQueued = true;
-  else queuedAction = action === 'shoot' && canUseSpecialShot(game.skill[0]) ? 'special' : action;
+  const player = game.players.find((item) => item.id === game.selectedPlayerId);
+  if (action === 'slide') {
+    slideQueued = true;
+    slideQueuedUntil = performance.now() + ACTION_BUFFER_MS;
+  } else {
+    queuedAction = action === 'shoot' && canUseSpecialShot(game.skill[0]) ? 'special' : action;
+    queuedActionUntil = performance.now() + ACTION_BUFFER_MS;
+    if (player?.id !== game.ball.ownerId) showControlNotice('RECUPERÁ LA PELOTA');
+  }
 }
 
 function queueSecondAction(action: ActionId) {
   if (!running || paused || currentMode !== 'local') return;
-  if (action === 'slide') p2SlideQueued = true;
-  else p2QueuedAction = action;
+  const player = game.players.find((item) => item.id === game.secondSelectedPlayerId);
+  if (action === 'slide') {
+    p2SlideQueued = true;
+    p2SlideQueuedUntil = performance.now() + ACTION_BUFFER_MS;
+  } else {
+    p2QueuedAction = action;
+    p2QueuedActionUntil = performance.now() + ACTION_BUFFER_MS;
+    if (player?.id !== game.ball.ownerId) showControlNotice('RECUPERÁ LA PELOTA');
+  }
+}
+
+function showControlNotice(text: string) {
+  eventCallout.textContent = text;
+  eventCallout.classList.remove('goal-callout', 'trick-callout');
+  eventCallout.classList.add('show');
+  eventCalloutTimer = 0.65;
 }
 
 el<HTMLButtonElement>('start-match').addEventListener('click', () => beginMatch('quick'));
@@ -553,6 +645,7 @@ trickButton.addEventListener('pointerup', (event) => {
   const dx = event.clientX - trickOrigin.x;
   const dy = event.clientY - trickOrigin.y;
   queuedTrick = Math.hypot(dx, dy) >= TRICK_SWIPE_THRESHOLD ? trickFromSwipe(dx, dy) : DEFAULT_TRICK;
+  queuedTrickUntil = performance.now() + ACTION_BUFFER_MS;
   const selected = TRICKS.find((item) => item.id === queuedTrick) ?? TRICKS[2];
   trickPreview.textContent = `${selected.direction} ${selected.name}`;
   trickPointer = null;
@@ -589,6 +682,7 @@ p2TrickButton.addEventListener('pointerup', (event) => {
   const dx = event.clientX - p2TrickOrigin.x;
   const dy = event.clientY - p2TrickOrigin.y;
   p2QueuedTrick = Math.hypot(dx, dy) >= TRICK_SWIPE_THRESHOLD ? trickFromSwipe(dx, dy) : p2TrickId;
+  p2QueuedTrickUntil = performance.now() + ACTION_BUFFER_MS;
   p2TrickPointer = null;
   p2TrickButton.classList.remove('pressed');
   window.setTimeout(() => trickSelector.classList.add('hidden'), 260);
@@ -692,7 +786,7 @@ window.addEventListener('keydown', (event) => {
   if (key === 'j') queueAction('pass');
   if (key === 'k') queueAction('lob');
   if (key === 'l') queueAction('slide');
-  if (key === 't' && running && !paused) queuedTrick = DEFAULT_TRICK;
+    if (key === 't' && running && !paused) { queuedTrick = DEFAULT_TRICK; queuedTrickUntil = performance.now() + ACTION_BUFFER_MS; }
   if (key === 'escape') paused ? resumeMatch() : pauseMatch();
 });
 window.addEventListener('keyup', (event) => {

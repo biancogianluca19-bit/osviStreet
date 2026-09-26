@@ -89,9 +89,10 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 ## Verificación y revisión
 
-- `pnpm test`: suite Vitest. La simulación de 200 partidos entre IAs promedió **5,855 goles por partido** y **41,63 remates**; no hubo partidos sin remates.
+- `pnpm test`: suite Vitest. La simulación de 200 partidos entre IAs promedió **5,175 goles por partido** y **37,38 remates**; no hubo partidos sin remates. El margen aceptado para seis goles es ±1 por partido.
 - `pnpm build`: compila TypeScript y Vite.
-- Interfaz revisada en navegador a **915 × 412**. Los ocho gestos y el selector táctil de trucos se comprobaron con eventos de puntero.
+- Interfaz revisada en navegador a **915 × 412** y **480 × 320**. Pase y barrida se tocaron durante un partido; el saque aceptó el pase en espera y ambos mostraron confirmación en pantalla.
+- Los ocho gestos de truco y el selector táctil se comprobaron con eventos de puntero.
 - Se revisó que saques, posesión, goles y recompensas sigan las reglas fuera del renderer y que la copa avance con los resultados guardados.
 
 ### Cambios de revisión
@@ -108,6 +109,9 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 - El botón de sonido quedó visible y la música comienza después de la primera interacción, según la política de reproducción del navegador.
 - Los compañeros del usuario ya reciben decisiones de IA: corren a ofrecerse, cambian de carril, buscan espacio ante marcas y presionan cuando el rival tiene la pelota.
 - Se ampliaron joysticks, botones de acción y pausa para celular y navegador. El duelo local reorganiza sus dos grupos en pantallas apaisadas angostas.
+- Los botones de pase, pase alto y pared excluyen al pasador de la recuperación durante su enfriamiento; el primer contacto ya no cancela el pase.
+- Los toques de acción esperan hasta **1,4 s** a que termine el saque o el enfriamiento. Pase, remate y barrida muestran una confirmación visible al ejecutarse; si no tenés la pelota, el juego lo indica.
+- Se añadieron pruebas de reglas para el pase efectivo y el evento de barrida.
 - Pausar limpia entradas que hayan quedado sostenidas; el panel permite reanudar o salir al menú. Salir no otorga una victoria ni avanza la copa.
 
 ## Pendiente de probar

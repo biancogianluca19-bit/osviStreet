@@ -5,7 +5,7 @@ import { FIELD, type Ball } from '../src/game/types';
 
 const ball = (): Ball => ({
   position: { x: 0, z: 0 }, height: FIELD.ballRadius,
-  velocity: { x: 0, z: 0 }, verticalVelocity: 0, ownerId: null,
+  velocity: { x: 0, z: 0 }, verticalVelocity: 0, ownerId: null, lastKickerId: null,
   lastTouch: 0, wallBounces: 0, trailTimer: 0, specialShot: false,
 });
 
@@ -49,6 +49,30 @@ describe('Fase 1: partido callejero', () => {
     expect(state.ball.ownerId).toBeNull();
     expect(state.teams[0].shots).toBe(1);
     expect(state.ball.velocity.x).toBeGreaterThan(0);
+  });
+
+  it('hace viajar un pase y no devuelve la pelota al pasador', () => {
+    const state = createMatch();
+    state.phase = 'playing';
+    state.ball.ownerId = 't0-p1';
+    const controls = { move: { x: 1, z: 0 }, sprint: false, slide: false, action: 'pass' as const };
+
+    stepMatch(state, controls);
+    stepMatch(state, { ...controls, action: undefined });
+
+    expect(state.ball.ownerId).not.toBe('t0-p1');
+    expect(state.events.some((event) => event.type === 'kick' && event.playerId === 't0-p1' && event.text === 'PASE')).toBe(true);
+    expect(state.ball.lastKickerId).toBe('t0-p1');
+  });
+
+  it('registra la barrida al tocar la acción aunque no haya un rival cerca', () => {
+    const state = createMatch();
+    state.phase = 'playing';
+    state.ball.ownerId = null;
+
+    stepMatch(state, { move: { x: 0, z: 0 }, sprint: false, slide: true });
+
+    expect(state.events.some((event) => event.type === 'tackle' && event.team === 0 && event.text === 'BARRIDA')).toBe(true);
   });
 
   it('termina el partido al alcanzar el quinto gol', () => {
