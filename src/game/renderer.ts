@@ -57,6 +57,8 @@ export class MatchRenderer {
   private ball!: THREE.Group;
   private ballShadow!: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
   private cameraTarget = new THREE.Vector3();
+  private impactRemaining = 0;
+  private impactPower = 0;
   private arena!: THREE.Group;
   private arenaLights: THREE.Light[] = [];
   private currentCourt: CourtId = 'court-rooftop';
@@ -117,6 +119,12 @@ export class MatchRenderer {
   setPixelScale(scale: number) {
     this.requestedPixelScale = Math.max(0.7, Math.min(scale, 1.5));
     this.resize();
+  }
+
+  impact(power = 0.55) {
+    const strength = Math.max(0.15, Math.min(power, 1));
+    this.impactPower = Math.max(this.impactPower, strength);
+    this.impactRemaining = Math.max(this.impactRemaining, 0.2);
   }
 
   setCourt(id: string) {
@@ -599,12 +607,19 @@ export class MatchRenderer {
     });
     const target = new THREE.Vector3(ball.position.x * 0.13, 0, ball.position.z * 0.12);
     this.cameraTarget.lerp(target, 1 - Math.exp(-dt * 1.2));
-    this.camera.lookAt(this.cameraTarget);
+    this.impactRemaining = Math.max(0, this.impactRemaining - dt);
+    const impactEnvelope = this.impactRemaining / 0.2 * this.impactPower;
+    const impactPhase = (0.2 - this.impactRemaining) * 68;
+    const impactX = Math.sin(impactPhase) * impactEnvelope * 0.12;
+    const impactY = Math.cos(impactPhase * 0.72) * impactEnvelope * 0.045;
+    this.camera.lookAt(this.cameraTarget.x + impactX, this.cameraTarget.y + impactY, this.cameraTarget.z);
+    if (this.impactRemaining === 0) this.impactPower = 0;
     this.updateParticles(dt);
     this.renderer.render(this.scene, this.camera);
   }
 
   celebrate(team: TeamId, color: string, position: { x: number; z: number }) {
+    this.impact(1);
     this.emitBurst(position, color, 64, 0.8);
     this.scene.background = new THREE.Color(team === 0 ? '#ffb455' : '#53ccbc');
     window.setTimeout(() => { this.scene.background = new THREE.Color(COURT_PALETTES[this.currentCourt].background); }, 620);

@@ -71,6 +71,7 @@ En teclado, el jugador 1 usa **W A S D**, **J** pase, **K** pase alto, **Espacio
 - Los jugadores tienen brazos y piernas articulados con ciclo de carrera; los arqueros inclinan el cuerpo al desplazarse. Los modelos procedurales usan más detalles de uniforme y cara.
 - Cuatro canchas caricaturescas: terraza al atardecer, jaula de grafitis, playa y galpón neón.
 - Estelas de pelota, partículas, cámara lenta breve, nombres de trucos, música y efectos de audio sintetizados.
+- Remates, trucos, rebotes, barridas, atajadas y goles activan un pulso de cámara de 200 ms; en navegadores móviles con `navigator.vibrate`, el mismo evento suma una vibración breve.
 - La escala de render baja o sube según los FPS observados para adaptarse al dispositivo.
 - `CALIDAD.md` registra la línea de base, los juegos de referencia y la puntuación por ronda. `PROGRESO.md` y `outputs/captures/` guardan los cambios y las capturas comparables en 1366 × 768 y 915 × 412.
 
@@ -95,7 +96,7 @@ Las reglas del partido funcionan sin Three.js. La simulación entrega un estado;
 
 ## Verificación y revisión
 
-- `pnpm test --exclude tests/aiBalance.test.ts --reporter=verbose`: pasó **37 tests** en cinco archivos en la ronda 3. Incluye compras, migración de guardados, cuatro retos diarios y quince logros. Una simulación experimental a 30 Hz dio 7,995 goles y se descartó. La simulación completa a 60 Hz más reciente registró **5,525 goles** y **39,26 remates** de promedio, sin partidos sin remates (78 victorias locales, 77 visitantes y 45 empates). La repetición más reciente se interrumpió tras más de 19 minutos; optimicé el recuento de eventos y amplié el límite local a 1.200 segundos. El workflow de `5aac843` completó tests/build, APK, Pages y prerelease: [ver ejecución y APK](https://github.com/biancogianluca19-bit/osviStreet/actions/runs/36222687147).
+- `pnpm test --exclude tests/aiBalance.test.ts --reporter=verbose`: pasó **37 tests** en cinco archivos en la ronda 3. Incluye compras, migración de guardados, cuatro retos diarios y quince logros. Una simulación experimental a 30 Hz dio 7,995 goles y se descartó. La simulación completa a 60 Hz más reciente registró **5,525 goles** y **39,26 remates** de promedio, sin partidos sin remates (78 victorias locales, 77 visitantes y 45 empates). Una repetición local posterior se prolongó más de 19 minutos; tras optimizar el conteo de eventos, el test completo de 200 partidos pasó en CI. El workflow de `fffcd99` completó la suite completa, build, APK, Pages y prerelease: [ver ejecución y APK](https://github.com/biancogianluca19-bit/osviStreet/actions/runs/36234266361).
 - `pnpm build`: compila TypeScript y Vite.
 - Interfaz revisada en navegador a **915 × 412** y **480 × 320**. Pase y barrida se tocaron durante un partido; el saque aceptó el pase en espera y ambos mostraron confirmación en pantalla.
 - En la ronda 1, Playwright confirmó que los botones principales miden **78 × 78 px** a 915 × 412 y que **Omitir** cierra el tutorial. Las capturas comparables están en `outputs/captures/round-0/` y `outputs/captures/round-1/`.

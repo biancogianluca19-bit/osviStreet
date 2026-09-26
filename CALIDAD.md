@@ -87,7 +87,7 @@ Menú en ambos tamaños y capturas originales están en `outputs/captures/round-
 
 Antes: menú a 915 × 412 y partido a 1366 × 768, en [`round-1/`](outputs/captures/round-1/). Después: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [partido a 1366 × 768](outputs/captures/round-2-after/match-1366x768.png). Las otras dos vistas están junto a estas en `round-2-after/`.
 
-La corrida experimental de 200 partidos a 30 Hz dio 7,995 goles y se descartó porque cambió el balance. La simulación completa a 60 Hz registró **5,525 goles** y **39,26 remates** de promedio, con **cero partidos sin remates**; los resultados fueron 78 victorias locales, 77 visitantes y 45 empates. Una repetición local fue detenida tras más de 19 minutos al seguir ocupando la máquina. Optimicé el contador de eventos, que antes recorría la cola cada frame incluso si no había eventos nuevos, y ahora volveré a ejecutar el test. El límite local está fijado en 1.200 segundos. El workflow de GitHub para `5aac843` terminó con éxito en tests/build, APK, Pages y prerelease.
+La corrida experimental de 200 partidos a 30 Hz dio 7,995 goles y se descartó porque cambió el balance. La simulación completa a 60 Hz registró **5,525 goles** y **39,26 remates** de promedio, con **cero partidos sin remates**; los resultados fueron 78 victorias locales, 77 visitantes y 45 empates. Una repetición local fue detenida tras más de 19 minutos al seguir ocupando la máquina. Optimicé el contador de eventos, que antes recorría la cola cada frame incluso si no había eventos nuevos. La suite completa, incluido el test de simulación de 200 partidos, pasó en el workflow del commit `fffcd99`; también publicó APK debug y Pages: [ejecución 36234266361](https://github.com/biancogianluca19-bit/osviStreet/actions/runs/36234266361).
 
 ## Ronda 3 · tienda, desafío diario y logros
 
@@ -113,3 +113,21 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 1 · 2026-09-26 | 7 | 6 | 5 | 3 | 3 | 24/50 |
 | Ronda 2 · 2026-09-26 | 7 | 7 | 6 | 5 | 4 | 29/50 |
 | Ronda 3 · 2026-09-26 | 8 | 7 | 6 | 5 | 8 | 34/50 |
+| Ronda 4 · 2026-09-26 | 8 | 8 | 7 | 5 | 8 | 36/50 |
+
+
+## Ronda 4 · respuesta a los impactos
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 8/10 | El tutorial y el menú de carrera siguen visibles; no cambiaron esta ronda. |
+| Sensación al jugar | 8/10 | Gol, remate, truco, barrida, atajada y rebote disparan un pulso háptico breve cuando el navegador lo permite. El toque de cámara dura 200 ms y escala según la fuerza del evento. |
+| Gráficos | 7/10 | Los impactos mueven suavemente el encuadre; la celebración de gol suma un golpe de cámara más marcado. |
+| Sonido | 5/10 | Conserva la mezcla y los sonidos de la ronda anterior; esta ronda no agrega muestras nuevas. |
+| Progresión | 8/10 | Tienda, carrera, récords, reto diario y quince logros permanecen sin cambios. |
+
+**Puntuación de ronda 4:** 36/50. Revisé las capturas de menú y partido en 1366 × 768 y 915 × 412. El tutorial y los controles táctiles entran en ambos tamaños; no hay controles recortados. Las capturas muestran el estado neutro, así que el movimiento de cámara se verifica durante eventos, no en una imagen fija.
+
+### Capturas comparables de ronda 4
+
+Antes: [partido a 915 × 412](outputs/captures/round-3-after/match-915x412.png). Después: [menú a 1366 × 768](outputs/captures/round-4-after/menu-1366x768.png), [partido a 1366 × 768](outputs/captures/round-4-after/match-1366x768.png), [menú a 915 × 412](outputs/captures/round-4-after/menu-915x412.png) y [partido a 915 × 412](outputs/captures/round-4-after/match-915x412.png).

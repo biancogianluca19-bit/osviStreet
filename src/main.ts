@@ -588,6 +588,7 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
       const team = newest.team ?? 0;
       renderer.celebrate(team, game.teams[team].primary, newest.position);
       audio.play('goal');
+      vibrate([110, 45, 85]);
       slowMotionRemaining = Math.max(slowMotionRemaining, 0.44);
     } else if (newest.type === 'trick') {
       const trick = TRICKS.find((item) => newest.text.startsWith(item.name));
@@ -597,16 +598,22 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
       eventCalloutTimer = 0.85;
       const color = newest.team !== undefined ? game.teams[newest.team].primary : '#ffdf5c';
       renderer.emitBurst(newest.position, color, 22, 0.78);
+      renderer.impact(0.45);
       audio.play('trick');
+      vibrate(22);
       slowMotionRemaining = Math.max(slowMotionRemaining, 0.28);
     } else if (newest.type === 'bounce' || newest.type === 'save' || newest.type === 'foul' || newest.type === 'tackle') {
       eventCallout.textContent = newest.text;
       eventCallout.classList.remove('goal-callout', 'trick-callout');
       eventCallout.classList.add('show');
       eventCalloutTimer = newest.type === 'tackle' ? 0.9 : 0.65;
+      renderer.impact(newest.type === 'save' ? 0.72 : newest.type === 'tackle' ? 0.58 : 0.32);
       if (newest.type === 'bounce') audio.play('wall');
       if (newest.type === 'save') audio.play('save');
       if (newest.type === 'tackle') audio.play('slide');
+      if (newest.type === 'save') vibrate(48);
+      else if (newest.type === 'tackle') vibrate([28, 24, 36]);
+      else if (newest.type === 'bounce') vibrate(16);
     } else if (newest.type === 'kick' || newest.type === 'special') {
       if (actionConfirmation === newest) {
         eventCallout.textContent = newest.text;
@@ -614,10 +621,16 @@ function showEvents(dt: number, inputPlayers: { team0: string | undefined; team1
         eventCallout.classList.add('show');
         eventCalloutTimer = 0.75;
       }
+      renderer.impact(newest.type === 'special' ? 0.78 : 0.38);
+      vibrate(newest.type === 'special' ? [45, 24, 55] : 12);
       audio.play(newest.text.toUpperCase().includes('PASE') ? 'pass' : 'kick');
     }
   }
   if (eventCalloutTimer <= 0) eventCallout.classList.remove('show', 'goal-callout', 'trick-callout');
+}
+
+function vibrate(pattern: number | number[]) {
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') navigator.vibrate(pattern);
 }
 
 function frame(now: number) {

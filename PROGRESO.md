@@ -41,6 +41,17 @@
 - **Prueba de interfaz:** emulé el navegador con controles táctiles en 915 × 412. La tarjeta quedó dentro del viewport; se abrió el panel con quince logros; comprar y equipar guardó la camiseta y restó monedas; **JUGAR AHORA** inició el partido; eventos táctiles en **PASE** y **BARRIDA** activaron ambos botones. Guardé una captura extra del panel de logros.
 - **Capturas revisadas:** cuatro vistas en 1366 × 768 y 915 × 412, además del panel de logros móvil: `outputs/captures/round-3-after/`. El panel se desplazó verticalmente y conservó tres columnas legibles.
 - **Tests y build:** 37 tests en cinco archivos pasaron con `pnpm test --exclude tests/aiBalance.test.ts --reporter=verbose`; `pnpm build` pasó. Vite mantiene la advertencia por el bundle principal de 587,59 kB (156,98 kB gzip).
-- **Balance:** la última simulación completa a 60 Hz registró 5,525 goles y 39,26 remates de promedio; no hubo partidos sin remates. No cambié reglas ni parámetros del partido esta ronda. La repetición local posterior se detuvo por el tiempo que ocupaba el equipo. Optimicé el conteo de eventos sin alterar el paso fijo de 60 Hz; la suite completa con esta optimización queda pendiente del workflow al publicar.
+- **Balance:** la última simulación completa a 60 Hz registró 5,525 goles y 39,26 remates de promedio; no hubo partidos sin remates. No cambié reglas ni parámetros del partido esta ronda. La repetición local posterior se detuvo por el tiempo que ocupaba el equipo. Optimicé el conteo de eventos sin alterar el paso fijo de 60 Hz; el workflow del commit `fffcd99` pasó la suite completa, incluida la simulación de 200 partidos, además de APK, Pages y prerelease: [ejecución 36234266361](https://github.com/biancogianluca19-bit/osviStreet/actions/runs/36234266361).
 - **Puntuación:** 34/50 — primeros 30 s 8, sensación 7, gráficos 6, sonido 5, progresión 8.
 - **Siguiente:** dar más respuesta de cámara/sonido a pases, entradas y paredes; continuar la revisión de rendimiento y cerrar la verificación de 200 partidos con el nuevo límite.
+
+## Ronda 4 · vibración y respuesta de cámara
+
+- **Hora:** 2026-09-26, cierre de ronda.
+- **Cambios:** agregué golpes de cámara de 200 ms con distinta intensidad para remate, truco, rebote, barrida, atajada y gol. Los mismos eventos piden una vibración corta si el navegador expone `navigator.vibrate`; los equipos sin esa API siguen usando cámara y audio.
+- **Capturas:** guardé menú y partido a 1366 × 768 y 915 × 412 en `outputs/captures/round-4-after/`. Revisé las dos capturas de partido; el tutorial y los controles quedan dentro del cuadro en horizontal. En la captura fija no se aprecia el golpe de cámara porque requiere un evento.
+- **Build:** `pnpm build` pasó; el bundle principal quedó en 588,41 kB (157,27 kB gzip) y Vite mantiene su aviso por superar 500 kB.
+- **Tests:** 37 pruebas sin la simulación de 200 partidos; el workflow de la ronda 3 pasó la suite completa. El workflow de esta ronda se comprobará después del push.
+- **Balance:** la medición reproducible anterior registró 5,525 goles y 39,26 remates por partido; cero encuentros sin remates. Esta ronda no cambia reglas ni parámetros de simulación.
+- **Puntuación:** 36/50 — primeros 30 s 8, sensación 8, gráficos 7, sonido 5, progresión 8.
+- **Siguiente:** confirmar tests y publicación de la ronda 4; revisar la carga del bundle, música durante partidos largos y respuesta en un teléfono Android real.
