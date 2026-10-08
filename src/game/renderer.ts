@@ -7,6 +7,7 @@ type ActorAnimation = 'kick' | 'slide' | 'save' | 'hit';
 type ActorView = {
   root: THREE.Group;
   shadow: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
+  marker: THREE.Sprite;
   pulse?: THREE.Mesh;
   keeper: boolean;
   torso: THREE.Group;
@@ -88,6 +89,8 @@ export class MatchRenderer {
   private readonly crowdTransform = new THREE.Object3D();
   private courtTexture: THREE.CanvasTexture | null = null;
   private contactShadowTexture: THREE.CanvasTexture | null = null;
+  private controlMarkerTexture: THREE.CanvasTexture | null = null;
+  private controlMarkerMaterial: THREE.SpriteMaterial | null = null;
 
   constructor(private readonly host: HTMLElement, initialCourt: CourtId = 'court-rooftop') {
     this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
@@ -116,6 +119,10 @@ export class MatchRenderer {
     this.courtTexture?.dispose();
     this.courtTexture = null;
     this.disposeGroup(this.actorsGroup);
+    this.controlMarkerMaterial?.dispose();
+    this.controlMarkerMaterial = null;
+    this.controlMarkerTexture?.dispose();
+    this.controlMarkerTexture = null;
     this.particles?.geometry.dispose();
     this.particles?.material.dispose();
     this.disposeGroup(this.ball);
@@ -294,6 +301,54 @@ export class MatchRenderer {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     return texture;
+  }
+
+  private createControlMarkerTexture() {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('No se pudo crear el indicador del jugador.');
+    context.lineJoin = 'round';
+    context.lineCap = 'round';
+    context.beginPath();
+    context.moveTo(64, 119);
+    context.lineTo(9, 59);
+    context.lineTo(39, 59);
+    context.lineTo(39, 9);
+    context.lineTo(89, 9);
+    context.lineTo(89, 59);
+    context.lineTo(119, 59);
+    context.closePath();
+    context.fillStyle = '#ffe84c';
+    context.strokeStyle = '#28213a';
+    context.lineWidth = 12;
+    context.stroke();
+    context.fill();
+    context.beginPath();
+    context.moveTo(64, 99);
+    context.lineTo(29, 62);
+    context.lineTo(47, 62);
+    context.lineTo(47, 18);
+    context.lineTo(81, 18);
+    context.lineTo(81, 62);
+    context.lineTo(99, 62);
+    context.closePath();
+    context.strokeStyle = '#fff9c2';
+    context.lineWidth = 3;
+    context.stroke();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    this.controlMarkerTexture = texture;
+    this.controlMarkerMaterial = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    return this.controlMarkerMaterial;
   }
 
   private buildGoal(side: number, palette: CourtPalette) {
@@ -603,6 +658,11 @@ export class MatchRenderer {
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(player.role === 'keeper' ? 0.78 : 0.68, 20), new THREE.MeshBasicMaterial({ color: '#ffffff', map: this.contactShadowTexture, transparent: true, opacity: 0.52, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.006;
+    const markerMaterial = this.controlMarkerMaterial ?? this.createControlMarkerTexture();
+    const marker = new THREE.Sprite(markerMaterial);
+    marker.scale.set(0.78, 0.82, 1);
+    marker.renderOrder = 10;
+    marker.visible = false;
     let pulse: THREE.Mesh | undefined;
     if (player.role === 'keeper') {
       const cap = this.outline(new THREE.SphereGeometry(0.31, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.54), colors[1]);
@@ -618,7 +678,7 @@ export class MatchRenderer {
       pulse.position.y = 0.04;
       root.add(pulse);
     }
-    return { root, shadow, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins, animationAge: 0, animationDirection: 1, animationPower: 1 };
+    return { root, shadow, marker, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins, animationAge: 0, animationDirection: 1, animationPower: 1 };
   }
 
   private buildBall() {
@@ -704,7 +764,7 @@ export class MatchRenderer {
     const living = new Set(state.players.map((p) => p.id));
     for (const [id, view] of this.actors) {
       if (!living.has(id)) {
-        this.actorsGroup.remove(view.root, view.shadow);
+        this.actorsGroup.remove(view.root, view.shadow, view.marker);
         this.actors.delete(id);
       }
     }
@@ -714,7 +774,7 @@ export class MatchRenderer {
         const colors = [state.teams[player.team].primary, state.teams[player.team].secondary] as [string, string];
         view = this.createActor(player, colors, state.bootColor);
         this.actors.set(player.id, view);
-        this.actorsGroup.add(view.root, view.shadow);
+        this.actorsGroup.add(view.root, view.shadow, view.marker);
       }
       view.root.position.set(player.position.x, 0, player.position.z);
       view.root.scale.setScalar(view.keeper ? 1.08 : 1.13);
@@ -755,6 +815,13 @@ export class MatchRenderer {
       view.shadow.position.set(view.root.position.x, 0.006, view.root.position.z);
       view.shadow.scale.setScalar(1 + jumpHeight * 0.32);
       view.shadow.material.opacity = Math.max(0.16, 0.52 - jumpHeight * 0.72);
+      const isControlled = player.id === state.selectedPlayerId
+        || (state.localPlayers === 2 && player.id === state.secondSelectedPlayerId);
+      view.marker.visible = isControlled;
+      if (isControlled) {
+        const bob = Math.sin(state.elapsed * 5 + Number(player.id.slice(-1)) * 0.9) * 0.09;
+        view.marker.position.set(player.position.x, 2.28 + view.root.position.y * 0.35 + bob, player.position.z);
+      }
       view.torso.rotation.x = -run * 0.1 + flourish * (player.trickId === 'pecho' ? -0.35 : 0.08) - kickPulse * 0.28 + celebration * Math.sin(celebrationAge * 8) * 0.12;
       view.torso.rotation.z = Math.sin(phase * 0.5) * run * 0.045 + celebration * 0.18 + slidePulse * 0.2;
       for (const [index, leg] of view.legs.entries()) {

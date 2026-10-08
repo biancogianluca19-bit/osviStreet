@@ -1,5 +1,13 @@
 # PROGRESO
 
+## Ronda 14 · indicador del jugador controlado
+
+- **Hora:** 2026-10-08, 16:47 ART.
+- **Cambios:** sumé una flecha amarilla con borde oscuro sobre el jugador activo. El marcador acompaña los saltos y cambios de jugador; en duelo local se muestran dos flechas.
+- **Pruebas:** 46/46 tests pasaron. La simulación de 200 partidos dio 5,525 goles, 39,26 remates, 35,025 atajadas y cero partidos sin remates. `pnpm build` pasó. El renderer pesa 541,60 kB (140,24 kB gzip).
+- **Límite de verificación:** el navegador automatizado no pudo conectarse al servidor local, así que no pude revisar la visibilidad de la flecha ni guardar capturas nuevas. Falta también validar en pantalla táctil física y Android.
+- **Puntuación:** 40/50 — primeros 30 s 9, sensación 9, gráficos 8, sonido 6, progresión 8.
+
 ## Ronda 0 · auditoría y línea de base
 
 - **Hora:** 2026-09-25 23:33 ART.

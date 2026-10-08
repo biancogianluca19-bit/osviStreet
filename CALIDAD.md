@@ -123,6 +123,7 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 11 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 | Ronda 12 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 | Ronda 13 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 14 · 2026-10-08 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -267,7 +268,7 @@ Captura de escritorio (CSS de esta ronda no aplica): [partido 1366 × 768 de ron
 
 ### Capturas de referencia
 
-Últimas capturas guardadas: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png), [pausa 915 × 412](outputs/captures/round-10-after/pause-915x412.png). Se revisaron en navegador vistas actuales a ambas resoluciones, pero no se exportaron a outputs/captures.
+Últimas capturas guardadas: [partido 1366 × 768](outputs/captures/round-13-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-13-after/match-915x412.png). La ronda 14 añadió un indicador flotante para quien lleva el control; todavía no pude tomar una nueva captura del navegador con esa flecha.
 
 ## Ronda 13 · textura de cancha y sombras suaves
 
@@ -284,3 +285,15 @@ Captura de escritorio (CSS de esta ronda no aplica): [partido 1366 × 768 de ron
 ### Capturas comparables de ronda 13
 
 Antes: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-13-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-13-after/match-915x412.png). Revisé ambas imágenes a tamaño completo.
+
+## Ronda 14 · indicador del jugador controlado
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Sin cambios. |
+| Sensación al jugar | 9/10 | La flecha amarilla con borde oscuro marca sobre la cancha al jugador que recibe el control; en duelo local sigue a los dos jugadores humanos. |
+| Gráficos | 8/10 | El indicador usa un sprite liviano orientado a cámara y una animación vertical suave. No aumenta geometría ni cambia las notas de calidad visual. |
+| Sonido | 6/10 | Sin cambios. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 14:** 40/50. `pnpm test --reporter=verbose` pasó 46/46 tests y la simulación de 200 partidos promedió 5,525 goles, 39,26 remates y 35,025 atajadas, sin encuentros sin remates. `pnpm build` pasó con el aviso conocido del chunk 3D de 541,60 kB. No pude abrir el servidor local en el navegador automatizado para capturar y comprobar la flecha visualmente; queda pendiente validar la marca en una pantalla horizontal y en un dispositivo táctil real.
