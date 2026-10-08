@@ -119,6 +119,10 @@ Antes: [menú a 915 × 412](outputs/captures/round-2-after/menu-915x412.png) y [
 | Ronda 7 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 | Ronda 8 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 | Ronda 9 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 10 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 11 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 12 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
+| Ronda 13 · 2026-09-26 | 9 | 9 | 8 | 6 | 8 | 40/50 |
 
 
 ## Ronda 4 · respuesta a los impactos
@@ -248,4 +252,35 @@ Antes: [pausa móvil ronda 9 no capturada; partido 915 × 412](outputs/captures/
 
 ### Capturas comparables de ronda 11
 
-Captura de escritorio (CSS de esta ronda no aplica): [partido 1366 × 768 de ronda 10](outputs/captures/round-10-after/match-1366x768.png). Captura móvil previa: [partido 915 × 412 de ronda 10](outputs/captures/round-10-after/match-915x412.png). La distribución nueva se vio en el navegador en 915 × 412; no quedó un archivo de esa imagen.\n## Ronda 12 · hinchada reactiva y duelo local\n\n| Área | Nota | Cambio observado |\n| --- | ---: | --- |\n| Primeros 30 segundos | 9/10 | Sin cambios.\n| Sensación al jugar | 9/10 | Los dos jugadores locales conservan controles táctiles de 86 × 86 px y joysticks de 96 × 96 px en 915 × 412.\n| Gráficos | 8/10 | La hinchada tiene cuerpo, cabeza y brazos animados; al gol salta y festeja. 34 figuras se dibujan en 3 llamadas con instancing.\n| Sonido | 6/10 | Sin cambios.\n| Progresión | 8/10 | Sin cambios.\n\n**Puntuación de ronda 12:** 40/50. Build y 46/46 tests pasaron; la simulación de 200 encuentros mantuvo 5,525 goles y cero partidos sin remates. Chrome mostró la escena en 915 × 412 y 1366 × 768 sin errores. La API del navegador mostró las capturas en el chat, pero no dio un archivo descargable; por eso no subí una carpeta nueva y enlazo la última captura guardada. La celebración de hinchada aún necesita una captura y prueba en teléfono.\n\n### Capturas de referencia\n\nÚltimas capturas guardadas: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png), [pausa 915 × 412](outputs/captures/round-10-after/pause-915x412.png). Se revisaron en navegador vistas actuales a ambas resoluciones, pero no se exportaron a outputs/captures.
+Captura de escritorio (CSS de esta ronda no aplica): [partido 1366 × 768 de ronda 10](outputs/captures/round-10-after/match-1366x768.png). Captura móvil previa: [partido 915 × 412 de ronda 10](outputs/captures/round-10-after/match-915x412.png). La distribución nueva se vio en el navegador en 915 × 412; no quedó un archivo de esa imagen.
+## Ronda 12 · hinchada reactiva y duelo local
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Sin cambios.
+| Sensación al jugar | 9/10 | Los dos jugadores locales conservan controles táctiles de 86 × 86 px y joysticks de 96 × 96 px en 915 × 412.
+| Gráficos | 8/10 | La hinchada tiene cuerpo, cabeza y brazos animados; al gol salta y festeja. 34 figuras se dibujan en 3 llamadas con instancing.
+| Sonido | 6/10 | Sin cambios.
+| Progresión | 8/10 | Sin cambios.
+
+**Puntuación de ronda 12:** 40/50. Build y 46/46 tests pasaron; la simulación de 200 encuentros mantuvo 5,525 goles y cero partidos sin remates. Chrome mostró la escena en 915 × 412 y 1366 × 768 sin errores. La API del navegador mostró las capturas en el chat, pero no dio un archivo descargable; por eso no subí una carpeta nueva y enlazo la última captura guardada. La celebración de hinchada aún necesita una captura y prueba en teléfono.
+
+### Capturas de referencia
+
+Últimas capturas guardadas: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png), [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png), [pausa 915 × 412](outputs/captures/round-10-after/pause-915x412.png). Se revisaron en navegador vistas actuales a ambas resoluciones, pero no se exportaron a outputs/captures.
+
+## Ronda 13 · textura de cancha y sombras suaves
+
+| Área | Nota | Cambio observado |
+| --- | ---: | --- |
+| Primeros 30 segundos | 9/10 | Sin cambios en el inicio ni en el tutorial. |
+| Sensación al jugar | 9/10 | En 915 × 412, PASE y BARRIDA mostraron su respuesta inmediata. Los ocho deslizamientos sobre TRUCO eligieron el gesto esperado. |
+| Gráficos | 8/10 | La cancha ahora usa una textura procedural repetible con variación suave y marcas de pasto. Jugadores y pelota reciben sombras radiales suaves de una sola textura compartida; la de los jugadores queda en el piso y se aclara al saltar. Mantengo la nota: los modelos siguen siendo procedurales y no hay posprocesado. |
+| Sonido | 6/10 | Sin cambios; falta escuchar la mezcla en un teléfono. |
+| Progresión | 8/10 | Sin cambios. |
+
+**Puntuación de ronda 13:** 40/50. Los 46 tests pasaron; la simulación de 200 partidos promedió 5,525 goles, 39,26 remates y 35,025 atajadas, con cero encuentros sin remates. `pnpm build` pasó. Chrome a 915 × 412 confirmó botones de 86 × 86 px, ocho selecciones de truco y cero errores; revisé también el partido en 1366 × 768. La captura reciente quedó guardada en `outputs/captures/round-13-after/`. El bundle del renderer pesa 532,80 kB (138,04 kB gzip) y Vite sigue avisando que supera 500 kB. No aumenté la nota de gráficos porque la textura y las sombras mejoran el piso, pero no sustituyen personajes y entornos con más detalle.
+
+### Capturas comparables de ronda 13
+
+Antes: [partido 1366 × 768](outputs/captures/round-10-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-10-after/match-915x412.png). Después: [partido 1366 × 768](outputs/captures/round-13-after/match-1366x768.png) y [partido 915 × 412](outputs/captures/round-13-after/match-915x412.png). Revisé ambas imágenes a tamaño completo.

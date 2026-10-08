@@ -6,6 +6,7 @@ type ActorAnimation = 'kick' | 'slide' | 'save' | 'hit';
 
 type ActorView = {
   root: THREE.Group;
+  shadow: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
   pulse?: THREE.Mesh;
   keeper: boolean;
   torso: THREE.Group;
@@ -85,6 +86,8 @@ export class MatchRenderer {
   private crowdArms: THREE.InstancedMesh | null = null;
   private crowdEnergy = 0;
   private readonly crowdTransform = new THREE.Object3D();
+  private courtTexture: THREE.CanvasTexture | null = null;
+  private contactShadowTexture: THREE.CanvasTexture | null = null;
 
   constructor(private readonly host: HTMLElement, initialCourt: CourtId = 'court-rooftop') {
     this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
@@ -110,6 +113,8 @@ export class MatchRenderer {
   dispose() {
     window.removeEventListener('resize', this.resize);
     this.disposeGroup(this.arena);
+    this.courtTexture?.dispose();
+    this.courtTexture = null;
     this.disposeGroup(this.actorsGroup);
     this.particles?.geometry.dispose();
     this.particles?.material.dispose();
@@ -117,6 +122,8 @@ export class MatchRenderer {
     this.disposeGroup(this.ballStreak);
     this.ballShadow?.geometry.dispose();
     this.ballShadow?.material.dispose();
+    this.contactShadowTexture?.dispose();
+    this.contactShadowTexture = null;
     this.arenaLights.forEach((light) => this.scene.remove(light));
     this.renderer.dispose();
     this.host.replaceChildren();
@@ -146,6 +153,7 @@ export class MatchRenderer {
     const nextCourt = courtId(id);
     if (nextCourt === this.currentCourt) return;
     this.clearGroup(this.arena);
+    this.courtTexture?.dispose();
     this.buildArena(nextCourt);
   }
 
@@ -171,15 +179,23 @@ export class MatchRenderer {
     const apron = new THREE.Mesh(new THREE.BoxGeometry(27.8, 0.45, 17.6), colorMaterial(palette.apron));
     apron.position.y = -0.37;
     this.arena.add(apron);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(FIELD.halfLength * 2, FIELD.halfWidth * 2), colorMaterial(palette.floor));
+    this.courtTexture = this.createCourtTexture();
+    const floorMaterial = new THREE.MeshToonMaterial({ color: palette.floor, map: this.courtTexture });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(FIELD.halfLength * 2, FIELD.halfWidth * 2), floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -0.12;
     this.arena.add(floor);
 
-    const stripe = colorMaterial(palette.stripeA);
-    const stripe2 = colorMaterial(palette.stripeB);
+    const stripe = new THREE.MeshToonMaterial({ color: palette.stripeA, map: this.courtTexture });
+    const stripe2 = new THREE.MeshToonMaterial({ color: palette.stripeB, map: this.courtTexture });
     for (let index = 0; index < 6; index++) {
-      const panel = new THREE.Mesh(new THREE.PlaneGeometry(4, FIELD.halfWidth * 2), index % 2 ? stripe : stripe2);
+      const geometry = new THREE.PlaneGeometry(4, FIELD.halfWidth * 2);
+      const uv = geometry.attributes.uv;
+      for (let vertex = 0; vertex < uv.count; vertex++) {
+        uv.setX(vertex, index / 6 + uv.getX(vertex) / 6);
+      }
+      uv.needsUpdate = true;
+      const panel = new THREE.Mesh(geometry, index % 2 ? stripe : stripe2);
       panel.rotation.x = -Math.PI / 2;
       panel.position.set(-10 + index * 4, -0.105, 0);
       this.arena.add(panel);
@@ -206,6 +222,78 @@ export class MatchRenderer {
     this.buildWalls(palette);
     this.buildCrowdProps(palette);
     this.buildCourtIdentity(id);
+  }
+
+  private createCourtTexture() {
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('No se pudo crear la textura del piso.');
+    context.fillStyle = '#fafcf1';
+    context.fillRect(0, 0, size, size);
+
+    let seed = 0x05a17;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 0x100000000;
+    };
+    for (let mark = 0; mark < 72; mark++) {
+      const x = random() * size;
+      const y = random() * size;
+      const radius = 3 + random() * 12;
+      const shade = Math.floor(92 + random() * 52);
+      const wash = context.createRadialGradient(x, y, 0, x, y, radius);
+      wash.addColorStop(0, `rgba(${shade},${shade + 18},${shade - 8},${0.025 + random() * 0.035})`);
+      wash.addColorStop(1, 'rgba(120,145,90,0)');
+      context.fillStyle = wash;
+      context.beginPath();
+      context.ellipse(x, y, radius * (1.2 + random() * 1.5), radius * (0.45 + random() * 0.4), random() * Math.PI, 0, Math.PI * 2);
+      context.fill();
+    }
+    for (let mark = 0; mark < 2600; mark++) {
+      const x = random() * size;
+      const y = random() * size;
+      const length = 1 + random() * 4.8;
+      const lightMark = random() > 0.42;
+      const lightness = Math.round(lightMark ? 210 + random() * 40 : 44 + random() * 35);
+      const green = lightMark ? lightness : lightness + 24;
+      context.strokeStyle = `rgba(${lightness},${green},${lightness - (lightMark ? 3 : 9)},${lightMark ? 0.16 + random() * 0.2 : 0.075 + random() * 0.09})`;
+      context.lineWidth = 0.6 + random() * 1.1;
+      context.lineCap = 'round';
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + (random() - 0.5) * 1.8, y - length);
+      context.stroke();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(3, 2);
+    texture.anisotropy = Math.min(2, this.renderer.capabilities.getMaxAnisotropy());
+    return texture;
+  }
+
+  private createContactShadowTexture() {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('No se pudo crear la sombra de contacto.');
+    const gradient = context.createRadialGradient(size / 2, size / 2, size * 0.04, size / 2, size / 2, size * 0.49);
+    gradient.addColorStop(0, 'rgba(28,26,39,0.54)');
+    gradient.addColorStop(0.38, 'rgba(28,26,39,0.36)');
+    gradient.addColorStop(0.72, 'rgba(28,26,39,0.12)');
+    gradient.addColorStop(1, 'rgba(28,26,39,0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, size, size);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
   }
 
   private buildGoal(side: number, palette: CourtPalette) {
@@ -512,10 +600,9 @@ export class MatchRenderer {
       legs.push(leg);
       shins.push(shin);
     }
-    const shadow = new THREE.Mesh(new THREE.CircleGeometry(player.role === 'keeper' ? 0.66 : 0.53, 12), new THREE.MeshBasicMaterial({ color: '#172335', transparent: true, opacity: 0.22 }));
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(player.role === 'keeper' ? 0.78 : 0.68, 20), new THREE.MeshBasicMaterial({ color: '#ffffff', map: this.contactShadowTexture, transparent: true, opacity: 0.52, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.006;
-    root.add(shadow);
     let pulse: THREE.Mesh | undefined;
     if (player.role === 'keeper') {
       const cap = this.outline(new THREE.SphereGeometry(0.31, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.54), colors[1]);
@@ -531,7 +618,7 @@ export class MatchRenderer {
       pulse.position.y = 0.04;
       root.add(pulse);
     }
-    return { root, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins, animationAge: 0, animationDirection: 1, animationPower: 1 };
+    return { root, shadow, pulse, keeper: player.role === 'keeper', torso, arms, legs, shins, animationAge: 0, animationDirection: 1, animationPower: 1 };
   }
 
   private buildBall() {
@@ -546,7 +633,8 @@ export class MatchRenderer {
       this.ball.add(patch);
     }
     this.scene.add(this.ball);
-    this.ballShadow = new THREE.Mesh(new THREE.CircleGeometry(0.36, 12), new THREE.MeshBasicMaterial({ color: '#223126', transparent: true, opacity: 0.2 }));
+    this.contactShadowTexture = this.createContactShadowTexture();
+    this.ballShadow = new THREE.Mesh(new THREE.CircleGeometry(0.48, 20), new THREE.MeshBasicMaterial({ color: '#ffffff', map: this.contactShadowTexture, transparent: true, opacity: 0.85, depthWrite: false }));
     this.ballShadow.rotation.x = -Math.PI / 2;
     this.ballShadow.position.y = 0.012;
     this.scene.add(this.ballShadow);
@@ -616,7 +704,7 @@ export class MatchRenderer {
     const living = new Set(state.players.map((p) => p.id));
     for (const [id, view] of this.actors) {
       if (!living.has(id)) {
-        this.actorsGroup.remove(view.root);
+        this.actorsGroup.remove(view.root, view.shadow);
         this.actors.delete(id);
       }
     }
@@ -626,7 +714,7 @@ export class MatchRenderer {
         const colors = [state.teams[player.team].primary, state.teams[player.team].secondary] as [string, string];
         view = this.createActor(player, colors, state.bootColor);
         this.actors.set(player.id, view);
-        this.actorsGroup.add(view.root);
+        this.actorsGroup.add(view.root, view.shadow);
       }
       view.root.position.set(player.position.x, 0, player.position.z);
       view.root.scale.setScalar(view.keeper ? 1.08 : 1.13);
@@ -663,6 +751,10 @@ export class MatchRenderer {
         + flourish * (player.trickId === 'sombrerito' ? 0.35 : 0.18)
         + (run ? Math.abs(Math.sin(state.elapsed * 13 + Number(player.id.slice(-1)))) * 0.055 : 0);
       view.root.position.z += player.facing.z * slidePulse * 0.34 + view.animationDirection * savePulse * 0.4;
+      const jumpHeight = Math.max(0, view.root.position.y);
+      view.shadow.position.set(view.root.position.x, 0.006, view.root.position.z);
+      view.shadow.scale.setScalar(1 + jumpHeight * 0.32);
+      view.shadow.material.opacity = Math.max(0.16, 0.52 - jumpHeight * 0.72);
       view.torso.rotation.x = -run * 0.1 + flourish * (player.trickId === 'pecho' ? -0.35 : 0.08) - kickPulse * 0.28 + celebration * Math.sin(celebrationAge * 8) * 0.12;
       view.torso.rotation.z = Math.sin(phase * 0.5) * run * 0.045 + celebration * 0.18 + slidePulse * 0.2;
       for (const [index, leg] of view.legs.entries()) {
@@ -690,7 +782,7 @@ export class MatchRenderer {
     const airScale = Math.max(0.5, 1 - ball.height * 0.1);
     this.ballShadow.position.set(ball.position.x, 0.014, ball.position.z);
     this.ballShadow.scale.setScalar(airScale);
-    this.ballShadow.material.opacity = Math.max(0.08, 0.28 - ball.height * 0.06);
+    this.ballShadow.material.opacity = Math.max(0.2, 0.78 - ball.height * 0.1);
     this.ball.scale.setScalar(ball.specialShot ? 1.34 : 1.18);
     this.ballStreak.visible = ball.trailTimer > 0;
     const speed = Math.hypot(ball.velocity.x, ball.velocity.z) || 1;
